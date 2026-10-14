@@ -5,6 +5,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 import java.util.Map;
 
@@ -53,5 +54,26 @@ public class AlunoController {
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(salvo);
+    }
+
+    // Listar todos os alunos
+    @GetMapping
+    public ResponseEntity<List<Aluno>> listarTodos() {
+        List<Aluno> alunos = alunoRepository.findAll();
+
+        return ResponseEntity.ok(alunos);
+    }
+
+    // Consultar aluno por id
+    @GetMapping("/{id}")
+    public ResponseEntity<?> consultarPorId(@PathVariable Long id) {
+        return alunoRepository.findById(id)
+                .<ResponseEntity<?>>map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity
+                        .status(HttpStatus.NOT_FOUND)
+                        .body(Map.of(
+                                "Erro", "Aluno não encontrado",
+                                "id", id
+                        )));
     }
 }
