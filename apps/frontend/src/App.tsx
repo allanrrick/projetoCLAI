@@ -29,6 +29,7 @@ import { Auth, useAuth } from './context'
 import { Empty, Loading, Notice, PageTitle } from './components/common'
 import { Alunos } from './pages/Alunos'
 import { CadastroAluno } from './pages/CadastroAluno'
+import { Historico } from './pages/Historico'
 import './App.css'
 
 function Logo() {
@@ -306,7 +307,7 @@ function Layout() {
               element={
                 <Guard permission="atendimentos:consultar">
                   <Guard permission="alunos:consultar">
-                    <Pending title="Historico de atendimentos" />
+                    <Historico />
                   </Guard>
                 </Guard>
               }
