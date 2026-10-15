@@ -1,0 +1,149 @@
+:root {
+  font-family:
+    Inter,
+    'Segoe UI',
+    system-ui,
+    -apple-system,
+    sans-serif;
+  color: #253a32;
+  background: #f6f8f6;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color-scheme: light;
+  --green: #22634b;
+  --green-dark: #173e30;
+  --muted: #687870;
+  --border: #e3e9e4;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-width: 320px;
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+button,
+select {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+a {
+  color: inherit;
+}
+button {
+  color: inherit;
+}
+a,
+button {
+  touch-action: manipulation;
+}
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid #389e75;
+  outline-offset: 4px;
+}
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid #389e75;
+  outline-offset: 2px;
+  border-color: #389e75;
+}
+input,
+select,
+textarea {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid #dbe3dd;
+  border-radius: 7px;
+  background: #fff;
+  color: #253a32;
+  padding: 11px 13px;
+  font-size: 14px;
+}
+input::placeholder,
+textarea::placeholder {
+  color: #7c8881;
+}
+textarea {
+  resize: vertical;
+  line-height: 1.7;
+}
+select {
+  padding-right: 28px;
+}
+label {
+  display: block;
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 9px;
+}
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+h1 {
+  font-size: clamp(28px, 2.8vw, 36px);
+  line-height: 1.2;
+  font-weight: 650;
+  letter-spacing: -1.3px;
+}
+h2 {
+  font-size: 17px;
+  font-weight: 650;
+  letter-spacing: -0.3px;
+}
+h3 {
+  font-size: 15px;
+}
+svg {
+  flex-shrink: 0;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+.skip-link {
+  position: fixed;
+  left: 20px;
+  top: -100px;
+  z-index: 99;
+  padding: 14px;
+  background: white;
+  color: #173e30;
+}
+.skip-link:focus {
+  top: 10px;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
