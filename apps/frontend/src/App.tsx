@@ -27,6 +27,8 @@ import { initials } from './lib/format'
 import type { Permission, Session } from './types'
 import { Auth, useAuth } from './context'
 import { Empty, Loading, Notice, PageTitle } from './components/common'
+import { Alunos } from './pages/Alunos'
+import { CadastroAluno } from './pages/CadastroAluno'
 import './App.css'
 
 function Logo() {
@@ -277,7 +279,7 @@ function Layout() {
               path="/alunos"
               element={
                 <Guard permission="alunos:consultar">
-                  <Pending title="Alunos" />
+                  <Alunos />
                 </Guard>
               }
             />
@@ -285,7 +287,7 @@ function Layout() {
               path="/alunos/novo"
               element={
                 <Guard permission="alunos:cadastrar">
-                  <Pending title="Cadastrar aluno" />
+                  <CadastroAluno />
                 </Guard>
               }
             />
