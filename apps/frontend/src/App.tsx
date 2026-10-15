@@ -29,6 +29,7 @@ import { Auth, useAuth } from './context'
 import { Empty, Loading, Notice, PageTitle } from './components/common'
 import { Alunos } from './pages/Alunos'
 import { CadastroAluno } from './pages/CadastroAluno'
+import { AtendimentoForm } from './pages/AtendimentoForm'
 import { Historico } from './pages/Historico'
 import './App.css'
 
@@ -297,7 +298,7 @@ function Layout() {
               element={
                 <Guard permission="atendimentos:cadastrar">
                   <Guard permission="alunos:consultar">
-                    <Pending title="Registrar atendimento" />
+                    <AtendimentoForm />
                   </Guard>
                 </Guard>
               }
@@ -514,15 +515,5 @@ export default function App() {
         <Layout />
       </BrowserRouter>
     </Auth.Provider>
-  )
-}
-
-function Pending({ title }: { title: string }) {
-  return (
-    <PageTitle
-      eyebrow="CLAI"
-      title={title}
-      description="Modulo em desenvolvimento nesta branch de feature."
-    />
   )
 }
