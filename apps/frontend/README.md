@@ -21,17 +21,17 @@ cp .env.example .env
 npm run dev
 ```
 
-O modo normal **não ativa demonstração quando a API falha**. O backend precisa fornecer a sessão e as permissões antes de liberar as telas. Na versão atual do repositório, os endpoints de autenticação e atendimento ainda não existem; alinhe os contratos propostos abaixo antes da integração real. O backend da branch `development` contém apenas a estrutura inicial; os endpoints de alunos estão na branch `feat/consulta-aluno`.
+O modo normal **não ativa demonstração quando a API falha**. O backend precisa fornecer a sessão e as permissões antes de liberar as telas. Na versão atual do repositório, os endpoints de autenticação e atendimento ainda não existem; alinhe os contratos propostos abaixo antes da integração real. A branch `development` já inclui os endpoints de cadastro e consulta de alunos; os endpoints de autenticação e atendimentos continuam pendentes.
 
 ## Telas e tarefas do quadro
 
-| Issue                                                      | Tela/comportamento implementado                                                                                                       | Dependência de integração                                                             |
-| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| [#8](https://github.com/allanrrick/projetoCLAI/issues/8)   | Cadastro com matrícula, nome, e-mail opcional e curso; validação; envio; tratamento de duplicidade, sucesso e erro                    | Endpoints de alunos existentes em `feat/consulta-aluno`, sessão e acesso pelo backend |
-| [#14](https://github.com/allanrrick/projetoCLAI/issues/14) | Atendimento associado ao aluno, data, hora, observações e documentos opcionais                                                        | Contrato de atendimento proposto, ainda não implementado no servidor                  |
-| [#18](https://github.com/allanrrick/projetoCLAI/issues/18) | Histórico por aluno, ordenação por data/hora e estados vazios                                                                         | Endpoint de histórico proposto                                                        |
-| [#19](https://github.com/allanrrick/projetoCLAI/issues/19) | Busca sem distinção de acentos/maiúsculas em observações, profissional e nomes dos anexos; período inclusivo e validação de intervalo | Confirmação desses filtros com a equipe; filtros locais sobre o histórico retornado   |
-| [#24](https://github.com/allanrrick/projetoCLAI/issues/24) | Menus, ações e rotas condicionados às permissões; tratamento de 401/403; limpeza da tela ao expirar a sessão                          | Servidor autenticado com autorização efetiva em todas as operações                    |
+| Issue                                                      | Tela/comportamento implementado                                                                                                       | Dependência de integração                                                           |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| [#8](https://github.com/allanrrick/projetoCLAI/issues/8)   | Cadastro com matrícula, nome, e-mail opcional e curso; validação; envio; tratamento de duplicidade, sucesso e erro                    | Endpoints de alunos existentes em `development`, sessão e acesso pelo backend       |
+| [#14](https://github.com/allanrrick/projetoCLAI/issues/14) | Atendimento associado ao aluno, data, hora, observações e documentos opcionais                                                        | Contrato de atendimento proposto, ainda não implementado no servidor                |
+| [#18](https://github.com/allanrrick/projetoCLAI/issues/18) | Histórico por aluno, ordenação por data/hora e estados vazios                                                                         | Endpoint de histórico proposto                                                      |
+| [#19](https://github.com/allanrrick/projetoCLAI/issues/19) | Busca sem distinção de acentos/maiúsculas em observações, profissional e nomes dos anexos; período inclusivo e validação de intervalo | Confirmação desses filtros com a equipe; filtros locais sobre o histórico retornado |
+| [#24](https://github.com/allanrrick/projetoCLAI/issues/24) | Menus, ações e rotas condicionados às permissões; tratamento de 401/403; limpeza da tela ao expirar a sessão                          | Servidor autenticado com autorização efetiva em todas as operações                  |
 
 O frontend não implementa autenticação ou autorização no servidor e não conclui essas issues de backend. As tarefas do GitHub não foram alteradas. O formulário de login é a interface para o contrato proposto de autenticação. Cadastro de usuários e anexos no perfil do aluno dependem de definição e implementação da API e não estão incluídos nesta entrega.
 
@@ -57,7 +57,7 @@ Em desenvolvimento, o Vite remove `/api` e encaminha ao `API_TARGET` (padrão `h
 
 ### Alunos — contrato existente
 
-Verificado no `AlunoController`, `Aluno` e `CadastrarAlunoDTO` da branch `feat/consulta-aluno`.
+Verificado no `AlunoController`, `Aluno` e `CadastrarAlunoDTO`, já integrados à branch `development`.
 
 - `GET /alunos`: retorna `Aluno[]`.
 - `POST /alunos`: recebe JSON com `matricula` (obrigatória, até 20 caracteres), `nome` (obrigatório, até 150), `email` (opcional, até 150) e `curso` (obrigatório, até 100).
