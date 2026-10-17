@@ -6,6 +6,9 @@
   <component name="ChangeListManager">
     <list default="true" id="066d1bc5-e263-43d6-b707-e0911de6cb96" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/projetoCLAI/aluno/AlunoRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/projetoCLAI/aluno/AlunoRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/projetoCLAI/atendimento/AtendimentoRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/projetoCLAI/atendimento/AtendimentoRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/java/com/projetoCLAI/atendimento/atendimentoDTO/CadastroAtendimentoDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/java/com/projetoCLAI/atendimento/atendimentoDTO/CadastroAtendimentoDTO.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

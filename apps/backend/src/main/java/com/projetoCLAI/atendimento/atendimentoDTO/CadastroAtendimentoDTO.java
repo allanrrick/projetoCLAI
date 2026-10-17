@@ -5,8 +5,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 
 public record CadastroAtendimentoDTO(
-        @NotNull(message = "O ID do aluno é obrigatório")
-        Long idAluno,
+        @NotNull(message = "A matricula do aluno é obrigatória")
+        String matricula,
 
         @NotNull(message = "A data e hora do atendimento são obrigatórias")
         LocalDateTime dataHora,
