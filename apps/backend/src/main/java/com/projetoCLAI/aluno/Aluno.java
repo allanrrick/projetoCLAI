@@ -1,8 +1,11 @@
 package com.projetoCLAI.aluno;
 
+import com.projetoCLAI.atendimento.Atendimento;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "aluno", schema = "public")
@@ -31,6 +34,9 @@ public class Aluno {
     @Column(name = "data_cadastro",
             insertable = false, updatable = false)
     private LocalDate dataCadastro;
+
+    @OneToMany(mappedBy = "aluno", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Atendimento> atendimentos = new ArrayList<>();
 
     public Aluno() {
     }
@@ -81,6 +87,19 @@ public class Aluno {
 
     public LocalDate getDataCadastro() {
         return dataCadastro;
+    }
+
+    public List<Atendimento> getAtendimentos() {
+        return atendimentos;
+    }
+
+    public void setAtendimentos(List<Atendimento> atendimentos) {
+        this.atendimentos = atendimentos;
+    }
+
+    public void adicionarAtendimento(Atendimento atendimento) {
+        this.atendimentos.add(atendimento);
+        atendimento.setAluno(this);
     }
 
 }
