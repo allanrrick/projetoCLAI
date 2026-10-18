@@ -61,16 +61,13 @@ public class AtendimentoController {
         return ResponseEntity.ok(atendimentos);
     }
 
-    @GetMapping("/aluno/{matricula}")
-    public ResponseEntity<List<AtendimentoResponseDTO>> listarPorMatricula(@PathVariable String matricula) {
+    @GetMapping("/{matricula}")
+    public ResponseEntity<List<Atendimento>> listarPorMatricula(@PathVariable String matricula) {
         if (!alunoRepository.existsByMatricula(matricula)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Aluno não encontrado com a matrícula: " + matricula);
         }
 
-        List<AtendimentoResponseDTO> atendimentos = atendimentoRepository.findByAlunoMatricula(matricula)
-                .stream()
-                .map(AtendimentoResponseDTO::new)
-                .toList();
+        List<Atendimento> atendimentos = atendimentoRepository.findByAlunoMatricula(matricula);
         return ResponseEntity.ok(atendimentos);
     }
 

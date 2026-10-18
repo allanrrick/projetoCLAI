@@ -1,5 +1,6 @@
 package com.projetoCLAI.atendimento;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.projetoCLAI.aluno.Aluno;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -25,6 +26,7 @@ public class Atendimento {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "aluno_id", nullable = false)
+    @JsonIgnore
     private Aluno aluno;
 
     public Atendimento() {
