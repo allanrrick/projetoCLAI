@@ -4,6 +4,9 @@ import com.projetoCLAI.aluno.Aluno;
 import com.projetoCLAI.aluno.AlunoRepository;
 import com.projetoCLAI.atendimento.atendimentoDTO.AtendimentoResponseDTO;
 import com.projetoCLAI.atendimento.atendimentoDTO.CadastroAtendimentoDTO;
+import com.projetoCLAI.auth.AuthController;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
@@ -34,7 +37,9 @@ public class AtendimentoController {
     private final FileStorageService fileStorageService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<AtendimentoResponseDTO> registrarAtendimento(@ModelAttribute @Valid CadastroAtendimentoDTO dto) {
+    public ResponseEntity<AtendimentoResponseDTO> registrarAtendimento(
+            @ModelAttribute @Valid CadastroAtendimentoDTO dto,
+            HttpServletRequest request) {
         if (!alunoRepository.existsByMatricula(dto.matricula())) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Aluno não encontrado com a matrícula: " + dto.matricula());
         }
@@ -46,7 +51,19 @@ public class AtendimentoController {
 
         String caminhoArquivo = fileStorageService.salvarFicheiro(dto.documento());
 
-        Atendimento atendimento = new Atendimento(dto.data(), dto.hora(), dto.observacoes(), caminhoArquivo, aluno);
+        HttpSession session = request.getSession(false);
+        String profissional = session != null
+                ? (String) session.getAttribute(AuthController.ATTR_USUARIO_NOME)
+                : null;
+
+        Atendimento atendimento = new Atendimento(
+                dto.data().trim(),
+                dto.hora().trim(),
+                dto.observacoes().trim(),
+                caminhoArquivo,
+                aluno,
+                profissional
+        );
         Atendimento salvo = atendimentoRepository.save(atendimento);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(new AtendimentoResponseDTO(salvo));
@@ -74,7 +91,11 @@ public class AtendimentoController {
     @GetMapping("/documentos/{nomeFicheiro:.+}")
     public ResponseEntity<Resource> descarregarDocumento(@PathVariable String nomeFicheiro) {
         try {
-            Path caminho = Paths.get("uploads").resolve(nomeFicheiro).normalize();
+            Path baseDir = Paths.get("uploads").toAbsolutePath().normalize();
+            Path caminho = baseDir.resolve(nomeFicheiro).normalize();
+            if (!caminho.startsWith(baseDir)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Caminho de documento inválido");
+            }
             Resource recurso = new UrlResource(caminho.toUri());
 
             if (!recurso.exists() || !recurso.isReadable()) {
@@ -84,6 +105,8 @@ public class AtendimentoController {
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + recurso.getFilename() + "\"")
                     .body(recurso);
+        } catch (ResponseStatusException e) {
+            throw e;
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Erro ao aceder ao documento", e);
         }

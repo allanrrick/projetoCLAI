@@ -31,9 +31,8 @@ public class Aluno {
     @Column(nullable = false)
     private Boolean ativo = true;
 
-    @Column(name = "data_cadastro",
-            insertable = false, updatable = false)
-    private LocalDate dataCadastro;
+    @Column(name = "data_cadastro", updatable = false)
+    private LocalDate dataCadastro = LocalDate.now();
 
     @OneToMany(mappedBy = "aluno", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Atendimento> atendimentos = new ArrayList<>();
@@ -86,7 +85,7 @@ public class Aluno {
     }
 
     public LocalDate getDataCadastro() {
-        return dataCadastro;
+        return dataCadastro != null ? dataCadastro : LocalDate.now();
     }
 
     public List<Atendimento> getAtendimentos() {

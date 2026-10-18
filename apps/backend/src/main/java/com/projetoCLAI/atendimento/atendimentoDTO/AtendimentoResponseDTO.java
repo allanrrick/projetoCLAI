@@ -8,7 +8,8 @@ public record AtendimentoResponseDTO(
         String data,
         String hora,
         String observacoes,
-        String documentoUrl
+        String documentoUrl,
+        String profissional
 ) {
     public AtendimentoResponseDTO(Atendimento atendimento) {
         this(
@@ -16,7 +17,8 @@ public record AtendimentoResponseDTO(
                 atendimento.getData(),
                 atendimento.getHora(),
                 atendimento.getObservacoes(),
-                atendimento.getDocumentoUrl()
+                atendimento.getDocumentoUrl(),
+                atendimento.getProfissional()
         );
     }
 }
