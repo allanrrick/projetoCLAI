@@ -8,8 +8,11 @@ public record CadastroAtendimentoDTO(
         @NotNull(message = "A matricula do aluno é obrigatória")
         String matricula,
 
-        @NotNull(message = "A data e hora do atendimento são obrigatórias")
-        LocalDateTime dataHora,
+        @NotNull()
+        String data,
+
+        @NotNull()
+        String hora,
 
         String observacoes,
 

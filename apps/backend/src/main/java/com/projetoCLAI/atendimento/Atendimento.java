@@ -13,10 +13,10 @@ public class Atendimento {
     private Long idAtendimento;
 
     @Column(nullable = false)
-    private LocalDateTime data;
+    private String data;
 
     @Column(nullable = false)
-    private LocalDateTime hora;
+    private String hora;
 
     @Column(columnDefinition = "TEXT")
     private String observacoes;
@@ -30,7 +30,7 @@ public class Atendimento {
     public Atendimento() {
     }
 
-    public Atendimento(LocalDateTime data, LocalDateTime hora, String observacoes, String documentoUrl, Aluno aluno) {
+    public Atendimento(String data, String hora, String observacoes, String documentoUrl, Aluno aluno) {
         this.data = data;
         this.hora = hora;
         this.observacoes = observacoes;
@@ -43,19 +43,19 @@ public class Atendimento {
         return idAtendimento;
     }
 
-    public LocalDateTime getData() {
+    public String getData() {
         return data;
     }
 
-    public void setDataHora(LocalDateTime data) {
+    public void setData(String data) {
         this.data = data;
     }
 
-    public LocalDateTime getHora() {
+    public String getHora() {
         return hora;
     }
 
-    public void setHora(LocalDateTime hora) {
+    public void setHora(String hora) {
         this.hora = hora;
     }
 

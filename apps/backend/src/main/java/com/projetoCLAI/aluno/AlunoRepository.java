@@ -12,5 +12,5 @@ public interface AlunoRepository
 
     boolean existsByEmail(String email);
 
-    Optional<Aluno> findByMatricula(String matricula);
+    Aluno findByMatricula(String matricula);
 }
