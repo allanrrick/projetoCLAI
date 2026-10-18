@@ -3,12 +3,20 @@ export type Permission =
   | 'alunos:cadastrar'
   | 'atendimentos:consultar'
   | 'atendimentos:cadastrar'
+export type PerfilAcesso = 'PROFISSIONAL_CLAI' | 'ASSISTENTE'
 export type Session = {
   nome: string
   email: string
+  perfil?: PerfilAcesso
   permissoes: Permission[]
   csrfToken?: string
   csrfHeaderName?: string
+}
+export type NovoUsuario = {
+  nome: string
+  email: string
+  senha: string
+  perfil?: PerfilAcesso
 }
 export type Aluno = {
   idAluno: number
@@ -35,4 +43,7 @@ export type Atendimento = {
 export type NovoAtendimento = Pick<
   Atendimento,
   'idAluno' | 'data' | 'hora' | 'observacoes'
-> & { documentos: File[] }
+> & {
+  matricula: string
+  documentos: File[]
+}
