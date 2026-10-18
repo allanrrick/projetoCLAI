@@ -348,21 +348,53 @@ function Login({
   initialError: string
   retry: () => void
 }) {
+  const [mode, setMode] = useState<'login' | 'register'>('login')
   const [error, setError] = useState('')
   const [pending, setPending] = useState(false)
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (pending) return
     const form = new FormData(event.currentTarget)
+    const email = String(form.get('email') || '').trim()
+    const senha = String(form.get('senha') || '')
+    if (mode === 'register') {
+      const nome = String(form.get('nome') || '').trim()
+      const confirmarSenha = String(form.get('confirmarSenha') || '')
+      const perfil =
+        form.get('perfil') === 'ASSISTENTE' ? 'ASSISTENTE' : 'PROFISSIONAL_CLAI'
+      if (!nome || !email || !senha) {
+        setError(
+          'Preencha nome, e-mail e senha. Campos com apenas espaços não são válidos.',
+        )
+        return
+      }
+      if (senha.length < 6) {
+        setError('A senha deve ter pelo menos 6 caracteres.')
+        return
+      }
+      if (senha !== confirmarSenha) {
+        setError('A confirmação de senha não confere.')
+        return
+      }
+      setPending(true)
+      setError('')
+      try {
+        onLogin(await api.cadastrarUsuario({ nome, email, senha, perfil }))
+      } catch (reason) {
+        setError(
+          reason instanceof Error
+            ? reason.message
+            : 'Não foi possível cadastrar o usuário.',
+        )
+      } finally {
+        setPending(false)
+      }
+      return
+    }
     setPending(true)
     setError('')
     try {
-      onLogin(
-        await api.login(
-          String(form.get('email')).trim(),
-          String(form.get('senha')),
-        ),
-      )
+      onLogin(await api.login(email, senha))
     } catch (reason) {
       setError(
         reason instanceof Error ? reason.message : 'Não foi possível entrar.',
@@ -394,9 +426,13 @@ function Login({
           <span className="section-icon">
             <ShieldCheck size={24} />
           </span>
-          <h2>Bem-vindo à CLAI</h2>
+          <h2>
+            {mode === 'login' ? 'Bem-vindo à CLAI' : 'Criar conta na CLAI'}
+          </h2>
           <p className="subtitle">
-            Entre com sua conta para acessar o acompanhamento.
+            {mode === 'login'
+              ? 'Entre com sua conta para acessar o acompanhamento.'
+              : 'Cadastre suas credenciais para acessar o acompanhamento.'}
           </p>
           {initialError && (
             <>
@@ -408,6 +444,19 @@ function Login({
           )}
           {error && <Notice>{error}</Notice>}
           <form onSubmit={submit}>
+            {mode === 'register' && (
+              <>
+                <label htmlFor="nome-usuario">Nome completo</label>
+                <input
+                  id="nome-usuario"
+                  name="nome"
+                  autoComplete="name"
+                  placeholder="Nome completo do profissional"
+                  maxLength={150}
+                  required
+                />
+              </>
+            )}
             <label htmlFor="email">E-mail</label>
             <input
               id="email"
@@ -418,25 +467,92 @@ function Login({
               maxLength={150}
               required
             />
+            {mode === 'register' && (
+              <>
+                <label htmlFor="perfil">Perfil de acesso</label>
+                <select
+                  id="perfil"
+                  name="perfil"
+                  defaultValue="PROFISSIONAL_CLAI"
+                >
+                  <option value="PROFISSIONAL_CLAI">
+                    Profissional da CLAI (acesso completo)
+                  </option>
+                  <option value="ASSISTENTE">
+                    Consulta (apenas visualização de alunos)
+                  </option>
+                </select>
+              </>
+            )}
             <label htmlFor="senha">Senha</label>
             <input
               id="senha"
               name="senha"
               type="password"
-              autoComplete="current-password"
+              autoComplete={
+                mode === 'login' ? 'current-password' : 'new-password'
+              }
+              minLength={mode === 'register' ? 6 : undefined}
               required
             />
+            {mode === 'register' && (
+              <>
+                <label htmlFor="confirmar-senha">Confirmar senha</label>
+                <input
+                  id="confirmar-senha"
+                  name="confirmarSenha"
+                  type="password"
+                  autoComplete="new-password"
+                  minLength={6}
+                  required
+                />
+              </>
+            )}
             <button
               type="submit"
               className="button primary full"
               disabled={pending}
             >
-              {pending ? 'Entrando…' : 'Entrar'}
+              {pending
+                ? mode === 'login'
+                  ? 'Entrando…'
+                  : 'Cadastrando…'
+                : mode === 'login'
+                  ? 'Entrar'
+                  : 'Cadastrar conta'}
               <ArrowRight size={18} />
             </button>
           </form>
           <p className="login-help">
-            Precisa de acesso? Entre em contato com a coordenação.
+            {mode === 'login' ? (
+              <>
+                Precisa de acesso?{' '}
+                <button
+                  type="button"
+                  className="text-button"
+                  onClick={() => {
+                    setError('')
+                    setMode('register')
+                  }}
+                >
+                  Criar conta
+                </button>
+              </>
+            ) : (
+              <>
+                Já possui uma conta?{' '}
+                <button
+                  type="button"
+                  className="text-button"
+                  onClick={() => {
+                    setError('')
+                    setMode('login')
+                  }}
+                >
+                  Entrar
+                </button>
+              </>
+            )}
           </p>
         </div>
       </main>

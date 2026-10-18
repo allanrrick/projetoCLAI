@@ -57,12 +57,8 @@ export function AtendimentoForm() {
     const data = String(values.get('data'))
     const hora = String(values.get('hora'))
     const observacoes = String(values.get('observacoes')).trim()
-    if (
-      !alunos?.some((aluno) => aluno.idAluno === idAluno) ||
-      !data ||
-      !hora ||
-      !observacoes
-    ) {
+    const alunoSelecionado = alunos?.find((aluno) => aluno.idAluno === idAluno)
+    if (!alunoSelecionado || !data || !hora || !observacoes) {
       setError('Selecione um aluno e preencha data, hora e observações.')
       return
     }
@@ -72,6 +68,7 @@ export function AtendimentoForm() {
     try {
       await api.cadastrarAtendimento({
         idAluno,
+        matricula: alunoSelecionado.matricula,
         data,
         hora,
         observacoes,

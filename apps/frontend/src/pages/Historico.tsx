@@ -87,8 +87,8 @@ export function Historico() {
 function StudentHistory({ aluno }: { aluno: Aluno }) {
   const location = useLocation()
   const load = useCallback(
-    () => api.atendimentos(aluno.idAluno),
-    [aluno.idAluno],
+    () => api.atendimentos(aluno.idAluno, aluno.matricula),
+    [aluno.idAluno, aluno.matricula],
   )
   const { data, loading, error, retry } = useResource(load)
   const [query, setQuery] = useState('')

@@ -1,10 +1,21 @@
 # Frontend CLAI
 
-Interface em React + TypeScript + Vite para o acompanhamento de alunos da CLAI do IFPB Campus Cajazeiras. Código em `apps/frontend`, separado do Spring Boot em `apps/backend`.
+Interface em React + TypeScript + Vite para o acompanhamento de alunos da CLAI do IFPB Campus Cajazeiras. Código em `apps/frontend`, integrado ao backend Spring Boot em `apps/backend`.
 
 ## Executar
 
 Requer Node.js 20.19+ ou 22.12+ e npm.
+
+Para executar com o backend (`apps/backend` na porta 8080):
+
+```bash
+cd apps/frontend
+cp .env.example .env
+npm ci
+npm run dev
+```
+
+Para executar apenas a demonstração em memória (sem backend):
 
 ```bash
 cd apps/frontend
@@ -12,132 +23,48 @@ npm ci
 npm run dev:demo
 ```
 
-Abra http://127.0.0.1:5173. A demonstração usa somente dados fictícios em memória, permite cadastrar alunos e atendimentos e restaura os exemplos ao recarregar a página. Não insira dados reais nesse modo. Não há persistência no navegador nem envio à API.
+Abra http://127.0.0.1:5173. No modo normal (`npm run dev`), o frontend utiliza os endpoints reais do backend (`/auth`, `/alunos` e `/atendimentos`).
 
-Para conectar ao backend:
+## Telas e issues atendidas
 
-```bash
-cp .env.example .env
-npm run dev
-```
+| Issue                                                      | Funcionalidade implementada e integrada                                                                                   |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| [#8](https://github.com/allanrrick/projetoCLAI/issues/8)   | Formulário de cadastro de alunos com matrícula, nome, e-mail opcional e curso, integrado a `POST /alunos` e `GET /alunos` |
+| [#14](https://github.com/allanrrick/projetoCLAI/issues/14) | Formulário de registro de atendimentos com aluno, data, hora, observações e anexo, integrado a `POST /atendimentos`       |
+| [#15](https://github.com/allanrrick/projetoCLAI/issues/15) | Validação de campos obrigatórios, associação com aluno e anexos no registro de atendimentos                               |
+| [#17](https://github.com/allanrrick/projetoCLAI/issues/17) | Consulta do histórico de atendimentos por aluno integrada a `GET /atendimentos/{matricula}`                               |
+| [#18](https://github.com/allanrrick/projetoCLAI/issues/18) | Exibição do histórico de atendimentos em ordem cronológica e tratamento de estado vazio                                   |
+| [#19](https://github.com/allanrrick/projetoCLAI/issues/19) | Busca textual (observações, profissional e anexos) e filtros por período no histórico                                     |
+| [#20](https://github.com/allanrrick/projetoCLAI/issues/20) | Testes de consulta, ordenação, busca, filtros e estado vazio do histórico                                                 |
+| [#21](https://github.com/allanrrick/projetoCLAI/issues/21) | Fluxo de autenticação (`POST /auth/login`, `GET /auth/sessao`, `POST /auth/logout`)                                       |
+| [#22](https://github.com/allanrrick/projetoCLAI/issues/22) | Fluxo e formulário de cadastro de usuários (`POST /auth/cadastro`) com validação e perfis de acesso                       |
+| [#23](https://github.com/allanrrick/projetoCLAI/issues/23) | Definição e verificação de permissões por perfil (`PROFISSIONAL_CLAI` e `ASSISTENTE`)                                     |
+| [#24](https://github.com/allanrrick/projetoCLAI/issues/24) | Controle de exibição de menus, rotas e ações conforme permissões da sessão e tratamento de 401/403                        |
+| [#25](https://github.com/allanrrick/projetoCLAI/issues/25) | Restrição do registro e consulta de atendimentos a usuários autorizados                                                   |
+| [#26](https://github.com/allanrrick/projetoCLAI/issues/26) | Suíte de testes cobrindo autenticação, cadastro de usuários, permissões e proteção dos atendimentos                       |
 
-O modo normal **não ativa demonstração quando a API falha**. O backend precisa fornecer a sessão e as permissões antes de liberar as telas. Na versão atual do repositório, os endpoints de autenticação e atendimento ainda não existem; alinhe os contratos propostos abaixo antes da integração real. A branch `development` já inclui os endpoints de cadastro e consulta de alunos; os endpoints de autenticação e atendimentos continuam pendentes.
+## Contratos da API Integrados
 
-## Telas e tarefas do quadro
+Todas as chamadas partem de `VITE_API_BASE_URL` (padrão `/api`), usam cookies de sessão (`credentials: include`), enviam `X-CSRF-TOKEN` em operações de escrita e têm timeout de 15 segundos. Em desenvolvimento, o Vite encaminha `/api/*` para `API_TARGET` (padrão `http://localhost:8080`).
 
-| Issue                                                      | Tela/comportamento implementado                                                                                                       | Dependência de integração                                                           |
-| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| [#8](https://github.com/allanrrick/projetoCLAI/issues/8)   | Cadastro com matrícula, nome, e-mail opcional e curso; validação; envio; tratamento de duplicidade, sucesso e erro                    | Endpoints de alunos existentes em `development`, sessão e acesso pelo backend       |
-| [#14](https://github.com/allanrrick/projetoCLAI/issues/14) | Atendimento associado ao aluno, data, hora, observações e documentos opcionais                                                        | Contrato de atendimento proposto, ainda não implementado no servidor                |
-| [#18](https://github.com/allanrrick/projetoCLAI/issues/18) | Histórico por aluno, ordenação por data/hora e estados vazios                                                                         | Endpoint de histórico proposto                                                      |
-| [#19](https://github.com/allanrrick/projetoCLAI/issues/19) | Busca sem distinção de acentos/maiúsculas em observações, profissional e nomes dos anexos; período inclusivo e validação de intervalo | Confirmação desses filtros com a equipe; filtros locais sobre o histórico retornado |
-| [#24](https://github.com/allanrrick/projetoCLAI/issues/24) | Menus, ações e rotas condicionados às permissões; tratamento de 401/403; limpeza da tela ao expirar a sessão                          | Servidor autenticado com autorização efetiva em todas as operações                  |
+### Autenticação e Usuários (`/auth`)
 
-O frontend não implementa autenticação ou autorização no servidor e não conclui essas issues de backend. As tarefas do GitHub não foram alteradas. O formulário de login é a interface para o contrato proposto de autenticação. Cadastro de usuários e anexos no perfil do aluno dependem de definição e implementação da API e não estão incluídos nesta entrega.
+- `POST /auth/cadastro`: recebe `{ nome, email, senha, perfil }`, cria o usuário com senha protegida por hash PBKDF2 (`PBKDF2WithHmacSHA256`), inicia a sessão e retorna `SessaoDTO` (`201 Created`).
+- `POST /auth/login`: recebe `{ email, senha }`, valida credenciais e estabelece sessão (`200 OK`).
+- `GET /auth/sessao`: retorna a sessão ativa com `nome`, `email`, `perfil`, `permissoes`, `csrfToken` e `csrfHeaderName` (`200 OK` ou `401 Unauthorized`).
+- `POST /auth/logout`: encerra a sessão (`204 No Content`).
 
-## Organização
+### Alunos (`/alunos`)
 
-```text
-src/
-  components/common.tsx  Componentes de mensagens, títulos e estados
-  hooks/useResource.ts   Carregamento assíncrono com proteção contra respostas antigas
-  lib/api.ts            Chamadas HTTP, sessão, CSRF e tratamento de erros
-  lib/demo.ts           Simulador explícito com dados fictícios em memória
-  lib/format.ts         Datas, busca e validação de URLs de anexos
-  pages/                Alunos, cadastro, atendimento e histórico
-  App.tsx               Navegação, sessão e controle visual de permissões
-  types.ts              Tipos dos contratos
-```
+- `GET /alunos`: lista alunos cadastrados (requer `alunos:consultar`).
+- `GET /alunos/{id}`: consulta aluno por ID (requer `alunos:consultar`).
+- `POST /alunos`: cadastra aluno com `matricula`, `nome`, `email` e `curso` (requer `alunos:cadastrar`).
 
-## Contratos da API
+### Atendimentos (`/atendimentos`)
 
-Todas as chamadas partem de `VITE_API_BASE_URL` (padrão `/api`), usam cookies via `credentials: include`, esperam JSON e têm timeout de 15 segundos. Respostas HTML ou redirecionamentos para login são tratados como erro. As rotas abaixo são relativas ao backend.
-
-Em desenvolvimento, o Vite remove `/api` e encaminha ao `API_TARGET` (padrão `http://localhost:8080`). Nenhum segredo deve ser colocado em variáveis `VITE_`, pois elas são públicas no bundle.
-
-### Alunos — contrato existente
-
-Verificado no `AlunoController`, `Aluno` e `CadastrarAlunoDTO`, já integrados à branch `development`.
-
-- `GET /alunos`: retorna `Aluno[]`.
-- `POST /alunos`: recebe JSON com `matricula` (obrigatória, até 20 caracteres), `nome` (obrigatório, até 150), `email` (opcional, até 150) e `curso` (obrigatório, até 100).
-- E-mail vazio é enviado como `null`. Nome, matrícula, e-mail e curso têm espaços externos removidos.
-- O sucesso do POST é confirmado pela resposta 2xx do servidor; 409 informa matrícula/e-mail duplicados. A lista é consultada novamente após salvar.
-
-```json
-{
-  "idAluno": 1,
-  "matricula": "202600001",
-  "nome": "Nome do aluno",
-  "email": null,
-  "curso": "Nome do curso",
-  "ativo": true,
-  "dataCadastro": "2026-10-15"
-}
-```
-
-### Sessão — proposta para alinhar com o backend
-
-- `GET /auth/sessao`: sessão autenticada, ou 401 quando não autenticado. Se esse recurso estiver ausente ou indisponível, as telas permanecem fechadas.
-- `POST /auth/login`: JSON `{ "email": "...", "senha": "..." }`; estabelece cookie de sessão e retorna JSON ou 204. O cliente consulta a sessão em seguida.
-- `POST /auth/logout`: invalida a sessão no servidor, retornando JSON ou 204. Uma falha é exibida sem afirmar que a sessão foi encerrada.
-
-Resposta esperada de `GET /auth/sessao`:
-
-```json
-{
-  "nome": "Profissional CLAI",
-  "email": "profissional@example.com",
-  "permissoes": [
-    "alunos:consultar",
-    "alunos:cadastrar",
-    "atendimentos:consultar",
-    "atendimentos:cadastrar"
-  ],
-  "csrfToken": "token-fornecido-pelo-servidor",
-  "csrfHeaderName": "X-CSRF-TOKEN"
-}
-```
-
-Os campos de CSRF são opcionais no formato da sessão e devem acompanhar a política efetiva do servidor. O cliente envia o token da sessão em operações de escrita. O fluxo de login também precisa da configuração de CSRF acordada com o backend. A configuração padrão do Spring Security (form login) não implementa esse contrato de login JSON. Não desabilite segurança para contornar essa dependência.
-
-As permissões vêm da sessão, não de escolhas na interface. Ocultar botões e bloquear rotas no React não substitui autorização no servidor. O backend deve validar todas as operações, inclusive download de documentos e o aluno consultado. A navegação de atendimento e histórico também exige `alunos:consultar` para selecionar o aluno.
-
-### Atendimentos — proposta para alinhar com o backend
-
-- `GET /alunos/{idAluno}/atendimentos`: retorna `Atendimento[]` exclusivamente do aluno autorizado.
-- `POST /atendimentos`: recebe `multipart/form-data` com uma parte `atendimento` (`application/json`) e partes `documentos` (arquivos). O profissional deve ser obtido da sessão no servidor.
-
-Parte `atendimento`:
-
-```json
-{
-  "idAluno": 1,
-  "data": "2026-10-15",
-  "hora": "09:30",
-  "observacoes": "Descrição do atendimento"
-}
-```
-
-Resposta de consulta/criação:
-
-```json
-{
-  "idAtendimento": 1,
-  "idAluno": 1,
-  "data": "2026-10-15",
-  "hora": "09:30:00",
-  "observacoes": "Descrição do atendimento",
-  "profissional": "Nome do profissional",
-  "documentos": [
-    { "id": "1", "nome": "orientacoes.pdf", "url": "/api/documentos/1" }
-  ]
-}
-```
-
-Os nomes de campo e endpoints desse módulo são uma proposta, centralizada em `src/lib/api.ts`; não foram encontrados no backend. Ajuste o adaptador e os tipos se a equipe definir outro formato. A interface limita a seleção a 5 arquivos PDF/PNG/JPEG de até 10 MB cada e observações a 10 mil caracteres; alinhar esses limites com o backend. Tipo, conteúdo, tamanho e autorização dos anexos também precisam ser validados pelo servidor.
-
-A interface só abre URLs de anexos HTTP/HTTPS na mesma origem ou blobs da demonstração. A API deve devolver URLs de download da mesma origem, com autorização no servidor. Não são exibidos links `javascript:` nem URLs externas não verificadas.
+- `POST /atendimentos`: recebe `multipart/form-data` com `matricula`, `data`, `hora`, `observacoes` e `documento` opcional (requer `atendimentos:cadastrar`).
+- `GET /atendimentos/{matricula}`: retorna os atendimentos do aluno correspondente (requer `atendimentos:consultar`).
+- `GET /atendimentos/documentos/{nomeFicheiro}`: realiza o download do documento anexado (requer `atendimentos:consultar`).
 
 ## Validação
 
@@ -145,14 +72,5 @@ A interface só abre URLs de anexos HTTP/HTTPS na mesma origem ou blobs da demon
 npm run build
 npm run lint
 npm run format:check
-npx playwright install chromium
 npm run test:e2e
 ```
-
-Os testes de navegador cobrem os fluxos de demonstração e requisições HTTP interceptadas para verificar contratos e respostas de erro. **Não são testes de integração com um backend real.** A suíte usa as portas 5173 e 5174; mantenha-as livres para garantir o modo correto de cada servidor. Em uma máquina com Chrome instalado é possível definir `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/caminho/do/chrome`.
-
-## Publicação
-
-`npm run build` gera `dist/`. Configure o servidor para servir `index.html` nas rotas do frontend e encaminhar `/api/*` ao backend, removendo o prefixo se a API mantiver `/alunos`. O proxy do Vite só existe em desenvolvimento. Use a mesma origem para frontend e API ou configure conscientemente cookies, CORS e CSRF no servidor. Não publique a versão de demonstração como sistema de produção.
-
-Referências: [React com Vite](https://react.dev/learn/build-a-react-app-from-scratch), [Vite](https://vite.dev/guide/).

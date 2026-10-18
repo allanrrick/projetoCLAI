@@ -24,6 +24,8 @@ public class Atendimento {
 
     private String documentoUrl;
 
+    private String profissional;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "aluno_id", nullable = false)
     @JsonIgnore
@@ -33,11 +35,16 @@ public class Atendimento {
     }
 
     public Atendimento(String data, String hora, String observacoes, String documentoUrl, Aluno aluno) {
+        this(data, hora, observacoes, documentoUrl, aluno, "Profissional CLAI");
+    }
+
+    public Atendimento(String data, String hora, String observacoes, String documentoUrl, Aluno aluno, String profissional) {
         this.data = data;
         this.hora = hora;
         this.observacoes = observacoes;
         this.documentoUrl = documentoUrl;
         this.aluno = aluno;
+        this.profissional = (profissional == null || profissional.isBlank()) ? "Profissional CLAI" : profissional;
     }
 
     // Getters e Setters
@@ -75,6 +82,14 @@ public class Atendimento {
 
     public void setDocumentoUrl(String documentoUrl) {
         this.documentoUrl = documentoUrl;
+    }
+
+    public String getProfissional() {
+        return (profissional == null || profissional.isBlank()) ? "Profissional CLAI" : profissional;
+    }
+
+    public void setProfissional(String profissional) {
+        this.profissional = profissional;
     }
 
     public Aluno getAluno() {

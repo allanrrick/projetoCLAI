@@ -72,7 +72,7 @@ test('esconde ações sem permissão e bloqueia a navegação direta sem consult
 }) => {
   await session(page, ['alunos:consultar'])
   let requested = false
-  await page.route('**/api/alunos/1/atendimentos', (route) => {
+  await page.route('**/api/atendimentos/API001', (route) => {
     requested = true
     return route.fulfill({ json: [] })
   })
@@ -102,13 +102,13 @@ test('trata 403 sem expor registros e permite tentar novamente', async ({
   page,
 }) => {
   await session(page)
-  await page.route('**/api/alunos/1/atendimentos', (route) =>
+  await page.route('**/api/atendimentos/API001', (route) =>
     route.fulfill({ status: 403, json: {} }),
   )
   await page.goto('/historico?aluno=1')
   await expect(page.getByRole('alert')).toContainText('Você não tem permissão')
   await expect(page.locator('.timeline')).toHaveCount(0)
-  await page.route('**/api/alunos/1/atendimentos', (route) =>
+  await page.route('**/api/atendimentos/API001', (route) =>
     route.fulfill({ json: [] }),
   )
   await page.getByRole('button', { name: 'Tentar novamente' }).click()
@@ -121,7 +121,7 @@ test('expiração de sessão remove dados da interface e exige nova autenticaç�
   page,
 }) => {
   await session(page)
-  await page.route('**/api/alunos/1/atendimentos', (route) =>
+  await page.route('**/api/atendimentos/API001', (route) =>
     route.fulfill({ status: 401, json: {} }),
   )
   await page.goto('/historico?aluno=1')
@@ -144,7 +144,7 @@ test('API indisponível não ativa demonstração e não libera dados', async ({
   await expect(page.getByRole('navigation')).toHaveCount(0)
 })
 
-test('envia atendimento multipart com aluno, data, hora, observações e documento', async ({
+test('envia atendimento multipart com matrícula, data, hora, observações e documento e mapeia resposta do backend', async ({
   page,
 }) => {
   await session(page)
@@ -153,10 +153,32 @@ test('envia atendimento multipart com aluno, data, hora, observações e documen
   await page.route('**/api/atendimentos', (route) => {
     body = route.request().postData() || ''
     contentType = route.request().headers()['content-type']
-    return route.fulfill({ status: 201, json: { idAtendimento: 1 } })
+    return route.fulfill({
+      status: 201,
+      json: {
+        id: 1,
+        data: '2026-10-15',
+        hora: '09:30',
+        observacoes: 'Registro de teste',
+        documentoUrl: 'uploads/123e4567-e89b-12d3-a456-426614174000_teste.pdf',
+        profissional: 'Pessoa teste',
+      },
+    })
   })
-  await page.route('**/api/alunos/1/atendimentos', (route) =>
-    route.fulfill({ json: [] }),
+  await page.route('**/api/atendimentos/API001', (route) =>
+    route.fulfill({
+      json: [
+        {
+          id: 1,
+          data: '2026-10-15',
+          hora: '09:30',
+          observacoes: 'Registro de teste',
+          documentoUrl:
+            'uploads/123e4567-e89b-12d3-a456-426614174000_teste.pdf',
+          profissional: 'Pessoa teste',
+        },
+      ],
+    }),
   )
   await page.goto('/atendimentos/novo?aluno=1')
   await page.getByLabel('Data *').fill('2026-10-15')
@@ -170,12 +192,18 @@ test('envia atendimento multipart com aluno, data, hora, observações e documen
   await page.getByRole('button', { name: 'Registrar atendimento' }).click()
   await expect(page).toHaveURL(/historico\?aluno=1/)
   expect(contentType).toContain('multipart/form-data; boundary=')
-  expect(body).toContain('name="atendimento"')
-  expect(body).toContain('"idAluno":1')
-  expect(body).toContain('"data":"2026-10-15"')
-  expect(body).toContain('"hora":"09:30"')
+  expect(body).toContain('name="matricula"')
+  expect(body).toContain('API001')
+  expect(body).toContain('name="data"')
+  expect(body).toContain('2026-10-15')
+  expect(body).toContain('name="hora"')
+  expect(body).toContain('09:30')
   expect(body).toContain('Registro de teste')
-  expect(body).toContain('name="documentos"; filename="teste.pdf"')
+  expect(body).toContain('name="documento"; filename="teste.pdf"')
+  await expect(page.getByRole('link', { name: 'teste.pdf' })).toHaveAttribute(
+    'href',
+    'http://127.0.0.1:5174/api/atendimentos/documentos/123e4567-e89b-12d3-a456-426614174000_teste.pdf',
+  )
 })
 
 test('login trata credenciais inválidas e consulta as permissões após autenticar', async ({
@@ -223,6 +251,55 @@ test('login trata credenciais inválidas e consulta as permissões após autenti
   )
 })
 
+test('cadastra novo usuário, valida confirmação de senha e autentica sessão', async ({
+  page,
+}) => {
+  await page.route('**/api/auth/sessao', (route) =>
+    route.fulfill({ status: 401, json: {} }),
+  )
+  let payload: unknown
+  await page.route('**/api/auth/cadastro', (route) => {
+    payload = route.request().postDataJSON()
+    return route.fulfill({
+      status: 201,
+      json: {
+        nome: 'Novo Profissional',
+        email: 'novo@example.com',
+        perfil: 'PROFISSIONAL_CLAI',
+        permissoes: [
+          'alunos:consultar',
+          'alunos:cadastrar',
+          'atendimentos:consultar',
+          'atendimentos:cadastrar',
+        ],
+      },
+    })
+  })
+  await page.route('**/api/alunos', (route) => route.fulfill({ json: [aluno] }))
+  await page.goto('/alunos')
+  await page.getByRole('button', { name: 'Criar conta' }).click()
+  await expect(
+    page.getByRole('heading', { name: 'Criar conta na CLAI' }),
+  ).toBeVisible()
+  await page.getByLabel('Nome completo').fill('Novo Profissional')
+  await page.getByLabel('E-mail', { exact: true }).fill('novo@example.com')
+  await page.getByLabel('Senha', { exact: true }).fill('senha123')
+  await page.getByLabel('Confirmar senha').fill('outra123')
+  await page.getByRole('button', { name: 'Cadastrar conta' }).click()
+  await expect(page.getByRole('alert')).toContainText(
+    'A confirmação de senha não confere.',
+  )
+  await page.getByLabel('Confirmar senha').fill('senha123')
+  await page.getByRole('button', { name: 'Cadastrar conta' }).click()
+  await expect(page.locator('tbody')).toContainText('Aluno da API')
+  expect(payload).toEqual({
+    nome: 'Novo Profissional',
+    email: 'novo@example.com',
+    senha: 'senha123',
+    perfil: 'PROFISSIONAL_CLAI',
+  })
+})
+
 test('falha no logout mantém a conta e a tentativa bem-sucedida volta ao login', async ({
   page,
 }) => {
@@ -250,7 +327,7 @@ test('não cria links de anexo para scripts ou origens externas', async ({
   page,
 }) => {
   await session(page)
-  await page.route('**/api/alunos/1/atendimentos', (route) =>
+  await page.route('**/api/atendimentos/API001', (route) =>
     route.fulfill({
       json: [
         {
@@ -267,7 +344,11 @@ test('não cria links de anexo para scripts ou origens externas', async ({
               nome: 'externo.pdf',
               url: 'https://externo.example.com/documento',
             },
-            { id: '3', nome: 'seguro.pdf', url: '/api/documentos/3' },
+            {
+              id: '3',
+              nome: 'seguro.pdf',
+              url: '/api/atendimentos/documentos/3',
+            },
           ],
         },
       ],
@@ -279,7 +360,7 @@ test('não cria links de anexo para scripts ou origens externas', async ({
   await expect(page.getByRole('link', { name: 'externo.pdf' })).toHaveCount(0)
   await expect(page.getByRole('link', { name: 'seguro.pdf' })).toHaveAttribute(
     'href',
-    'http://127.0.0.1:5174/api/documentos/3',
+    'http://127.0.0.1:5174/api/atendimentos/documentos/3',
   )
 })
 

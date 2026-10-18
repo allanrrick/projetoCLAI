@@ -29,11 +29,12 @@ public class FileStorageService {
 
         try {
             String nomeOriginal = file.getOriginalFilename();
-            String extensao = "";
-            if (nomeOriginal != null && nomeOriginal.contains(".")) {
-                extensao = nomeOriginal.substring(nomeOriginal.lastIndexOf("."));
+            String nomeLimpo = "documento";
+            if (nomeOriginal != null && !nomeOriginal.isBlank()) {
+                nomeLimpo = Paths.get(nomeOriginal).getFileName().toString()
+                        .replaceAll("[^a-zA-Z0-9._-]", "_");
             }
-            String novoNome = UUID.randomUUID() + extensao;
+            String novoNome = UUID.randomUUID() + "_" + nomeLimpo;
 
             Path destino = this.uploadDir.resolve(novoNome);
             Files.copy(file.getInputStream(), destino, StandardCopyOption.REPLACE_EXISTING);

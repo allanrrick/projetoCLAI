@@ -3,19 +3,35 @@ import type {
   Atendimento,
   NovoAluno,
   NovoAtendimento,
+  NovoUsuario,
+  Permission,
   Session,
 } from '../types'
 import { ApiError } from './api'
 
+const fullPermissions: Permission[] = [
+  'alunos:consultar',
+  'alunos:cadastrar',
+  'atendimentos:consultar',
+  'atendimentos:cadastrar',
+]
+
 export const session: Session = {
   nome: 'Profissional CLAI',
   email: 'demo@example.com',
-  permissoes: [
-    'alunos:consultar',
-    'alunos:cadastrar',
-    'atendimentos:consultar',
-    'atendimentos:cadastrar',
-  ],
+  perfil: 'PROFISSIONAL_CLAI',
+  permissoes: fullPermissions,
+}
+
+export function cadastrarUsuario(input: NovoUsuario): Session {
+  const permissoes: Permission[] =
+    input.perfil === 'ASSISTENTE' ? ['alunos:consultar'] : fullPermissions
+  return {
+    nome: input.nome,
+    email: input.email,
+    perfil: input.perfil || 'PROFISSIONAL_CLAI',
+    permissoes,
+  }
 }
 // Somente dados fictícios, mantidos em memória. Recarregar a página restaura os exemplos.
 const alunos: Aluno[] = [

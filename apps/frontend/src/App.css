@@ -1052,7 +1052,8 @@ hr {
 .login-form form {
   margin-top: 32px;
 }
-.login-form input {
+.login-form input,
+.login-form select {
   margin-bottom: 23px;
 }
 .login-form .full {
