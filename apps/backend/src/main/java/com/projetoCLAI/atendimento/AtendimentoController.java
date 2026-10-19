@@ -4,6 +4,7 @@ import com.projetoCLAI.aluno.Aluno;
 import com.projetoCLAI.aluno.AlunoRepository;
 import com.projetoCLAI.atendimento.atendimentoDTO.AtendimentoResponseDTO;
 import com.projetoCLAI.atendimento.atendimentoDTO.CadastroAtendimentoDTO;
+import com.projetoCLAI.atendimento.atendimentoDTO.HistoricoAtendimentoDTO;
 import com.projetoCLAI.auth.AuthController;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -78,15 +79,19 @@ public class AtendimentoController {
         return ResponseEntity.ok(atendimentos);
     }
 
-    @GetMapping("/{matricula}")
-    public ResponseEntity<List<Atendimento>> listarPorMatricula(@PathVariable String matricula) {
-        if (!alunoRepository.existsByMatricula(matricula)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Aluno não encontrado com a matrícula: " + matricula);
-        }
+	@GetMapping("/{matricula}")
+	public ResponseEntity<List<HistoricoAtendimentoDTO>> listarPorMatricula(@PathVariable String matricula) {
+		if (!alunoRepository.existsByMatricula(matricula)) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Aluno não encontrado com a matrícula: " + matricula);
+		}
 
-        List<Atendimento> atendimentos = atendimentoRepository.findByAlunoMatricula(matricula);
-        return ResponseEntity.ok(atendimentos);
-    }
+		List<HistoricoAtendimentoDTO> atendimentos = atendimentoRepository
+				.findByAlunoMatriculaOrderByDataDescHoraDesc(matricula)
+				.stream()
+				.map(HistoricoAtendimentoDTO::new)
+				.toList();
+		return ResponseEntity.ok(atendimentos);
+	}
 
     @GetMapping("/documentos/{nomeFicheiro:.+}")
     public ResponseEntity<Resource> descarregarDocumento(@PathVariable String nomeFicheiro) {
