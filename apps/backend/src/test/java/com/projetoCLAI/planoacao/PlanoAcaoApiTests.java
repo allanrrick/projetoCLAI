@@ -169,6 +169,63 @@ class PlanoAcaoApiTests {
                 .andExpect(status().isForbidden());
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"idAluno", "periodoLetivo", "possuiComorbidade", "usaMedicacaoContinua",
+            "frequentaServicosApoio", "apresentouDocumentos", "necessidadesEspecificas",
+            "percursoEducacional", "principaisDemandas", "propostasIntervencao", "nomeCoordenador", "dataDocumento"})
+    void exigeTodosOsCamposObrigatorios(String campo) throws Exception {
+        Map<String, Object> dados = dadosValidos();
+        dados.remove(campo);
+        rejeitar(dados, 400);
+    }
+
+    @Test
+    void validaEmailDataETamanhoDosTextos() throws Exception {
+        Map<String, Object> dados = dadosValidos();
+        dados.put("emailResponsavel", "email-invalido");
+        rejeitar(dados, 400);
+        dados.remove("emailResponsavel");
+        dados.put("dataNascimento", "2999-01-01");
+        rejeitar(dados, 400);
+        dados.remove("dataNascimento");
+        dados.put("periodoLetivo", "a".repeat(21));
+        rejeitar(dados, 400);
+        dados.put("periodoLetivo", "2026.2");
+        dados.put("necessidadesEspecificas", "a".repeat(20001));
+        rejeitar(dados, 400);
+    }
+
+    @Test
+    void permiteVariosPlanosEPreservaDescricoesCondicionais() throws Exception {
+        Map<String, Object> dados = dadosValidos();
+        dados.put("possuiComorbidade", true); dados.put("comorbidades", "Descrição com acentuação.\nSegunda linha.");
+        dados.put("usaMedicacaoContinua", true); dados.put("medicacoes", "Medicação de teste.");
+        dados.put("frequentaServicosApoio", true); dados.put("servicosApoio", "Apoio de teste.");
+        dados.put("apresentouDocumentos", true); dados.put("documentosComprobatorios", "Relatório de teste.");
+        for (int i = 0; i < 2; i++) {
+            mockMvc.perform(post("/planos-acao").session(sessao).header("X-CSRF-TOKEN", "csrf-plano")
+                            .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(dados)))
+                    .andExpect(status().isCreated());
+        }
+        entityManager.flush(); entityManager.clear();
+        mockMvc.perform(get("/planos-acao/aluno/{id}", aluno.getIdAluno()).session(sessao))
+                .andExpect(status().isOk()).andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].comorbidades").value(dados.get("comorbidades")))
+                .andExpect(jsonPath("$[0].medicacoes").value(dados.get("medicacoes")))
+                .andExpect(jsonPath("$[0].servicosApoio").value(dados.get("servicosApoio")))
+                .andExpect(jsonPath("$[0].documentosComprobatorios").value(dados.get("documentosComprobatorios")));
+    }
+
+    @Test
+    void naoCadastraComAutorInexistenteOuInativo() throws Exception {
+        sessao.setAttribute(AuthController.ATTR_USUARIO_ID, -1L);
+        rejeitar(dadosValidos(), 401);
+        sessao.setAttribute(AuthController.ATTR_USUARIO_ID, autor.getIdUsuario());
+        autor.setAtivo(false);
+        usuarioRepository.saveAndFlush(autor);
+        rejeitar(dadosValidos(), 403);
+    }
+
     private Map<String, Object> dadosValidos() {
         Map<String, Object> dados = new LinkedHashMap<>();
         dados.put("idAluno", aluno.getIdAluno());
