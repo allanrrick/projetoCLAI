@@ -40,6 +40,12 @@ export type Atendimento = {
   profissional: string
   documentos: Documento[]
 }
+export type HistoricoParams = {
+  q?: string
+  inicio?: string
+  fim?: string
+  ordem?: 'asc' | 'desc'
+}
 export type NovoAtendimento = Pick<
   Atendimento,
   'idAluno' | 'data' | 'hora' | 'observacoes'

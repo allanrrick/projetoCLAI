@@ -72,7 +72,7 @@ test('esconde ações sem permissão e bloqueia a navegação direta sem consult
 }) => {
   await session(page, ['alunos:consultar'])
   let requested = false
-  await page.route('**/api/atendimentos/API001', (route) => {
+  await page.route('**/api/atendimentos/API001*', (route) => {
     requested = true
     return route.fulfill({ json: [] })
   })
@@ -102,13 +102,13 @@ test('trata 403 sem expor registros e permite tentar novamente', async ({
   page,
 }) => {
   await session(page)
-  await page.route('**/api/atendimentos/API001', (route) =>
+  await page.route('**/api/atendimentos/API001*', (route) =>
     route.fulfill({ status: 403, json: {} }),
   )
   await page.goto('/historico?aluno=1')
   await expect(page.getByRole('alert')).toContainText('Você não tem permissão')
   await expect(page.locator('.timeline')).toHaveCount(0)
-  await page.route('**/api/atendimentos/API001', (route) =>
+  await page.route('**/api/atendimentos/API001*', (route) =>
     route.fulfill({ json: [] }),
   )
   await page.getByRole('button', { name: 'Tentar novamente' }).click()
@@ -121,7 +121,7 @@ test('expiração de sessão remove dados da interface e exige nova autenticaç�
   page,
 }) => {
   await session(page)
-  await page.route('**/api/atendimentos/API001', (route) =>
+  await page.route('**/api/atendimentos/API001*', (route) =>
     route.fulfill({ status: 401, json: {} }),
   )
   await page.goto('/historico?aluno=1')
@@ -165,7 +165,7 @@ test('envia atendimento multipart com matrícula, data, hora, observações e do
       },
     })
   })
-  await page.route('**/api/atendimentos/API001', (route) =>
+  await page.route('**/api/atendimentos/API001*', (route) =>
     route.fulfill({
       json: [
         {
@@ -327,7 +327,7 @@ test('não cria links de anexo para scripts ou origens externas', async ({
   page,
 }) => {
   await session(page)
-  await page.route('**/api/atendimentos/API001', (route) =>
+  await page.route('**/api/atendimentos/API001*', (route) =>
     route.fulfill({
       json: [
         {

@@ -86,34 +86,28 @@ export function Historico() {
 }
 function StudentHistory({ aluno }: { aluno: Aluno }) {
   const location = useLocation()
+  const [sort, setSort] = useState<'asc' | 'desc'>('desc')
   const load = useCallback(
-    () => api.atendimentos(aluno.idAluno, aluno.matricula),
-    [aluno.idAluno, aluno.matricula],
+    () => api.atendimentos(aluno.idAluno, aluno.matricula, { ordem: sort }),
+    [aluno.idAluno, aluno.matricula, sort],
   )
   const { data, loading, error, retry } = useResource(load)
   const [query, setQuery] = useState('')
   const [start, setStart] = useState('')
   const [end, setEnd] = useState('')
-  const [sort, setSort] = useState('desc')
   const [success, setSuccess] = useState(
     location.state?.success as string | undefined,
   )
   const invalidDates = Boolean(start && end && start > end)
-  const filtered = (data || [])
-    .filter(
-      (item) =>
-        item.idAluno === aluno.idAluno &&
-        normalize(
-          `${item.observacoes} ${item.profissional} ${item.documentos.map((doc) => doc.nome).join(' ')}`,
-        ).includes(normalize(query.trim())) &&
-        (!start || item.data >= start) &&
-        (!end || item.data <= end),
-    )
-    .sort(
-      (a, b) =>
-        `${a.data}T${a.hora}`.localeCompare(`${b.data}T${b.hora}`) *
-        (sort === 'desc' ? -1 : 1),
-    )
+  const filtered = (data || []).filter(
+    (item) =>
+      item.idAluno === aluno.idAluno &&
+      normalize(
+        `${item.observacoes} ${item.profissional} ${item.documentos.map((doc) => doc.nome).join(' ')}`,
+      ).includes(normalize(query.trim())) &&
+      (!start || item.data >= start) &&
+      (!end || item.data <= end),
+  )
   function reset() {
     setQuery('')
     setStart('')
@@ -181,7 +175,9 @@ function StudentHistory({ aluno }: { aluno: Aluno }) {
               <select
                 id="ordem"
                 value={sort}
-                onChange={(event) => setSort(event.target.value)}
+                onChange={(event) =>
+                  setSort(event.target.value === 'asc' ? 'asc' : 'desc')
+                }
               >
                 <option value="desc">Mais recentes primeiro</option>
                 <option value="asc">Mais antigos primeiro</option>

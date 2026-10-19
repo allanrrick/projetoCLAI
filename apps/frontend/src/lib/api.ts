@@ -2,6 +2,7 @@ import type {
   Aluno,
   Atendimento,
   Documento,
+  HistoricoParams,
   NovoAluno,
   NovoAtendimento,
   NovoUsuario,
@@ -219,11 +220,18 @@ export const api = {
   async atendimentos(
     idAluno: number,
     matricula?: string,
+    params: HistoricoParams = {},
   ): Promise<Atendimento[]> {
-    if (demo) return (await demo).getAtendimentos(idAluno)
+    if (demo) return (await demo).getAtendimentos(idAluno, params)
     const chave = matricula ? encodeURIComponent(matricula) : String(idAluno)
+    const query = new URLSearchParams()
+    if (params.q?.trim()) query.set('q', params.q.trim())
+    if (params.inicio) query.set('inicio', params.inicio)
+    if (params.fim) query.set('fim', params.fim)
+    if (params.ordem) query.set('ordem', params.ordem)
+    const search = query.toString()
     const result = await request<Record<string, unknown>[]>(
-      `/atendimentos/${chave}`,
+      `/atendimentos/${chave}${search ? `?${search}` : ''}`,
     )
     if (!Array.isArray(result))
       throw new ApiError('Não foi possível carregar o histórico.')
