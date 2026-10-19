@@ -206,7 +206,8 @@ export function Alunos() {
                       <th scope="col">Curso</th>
                       <th scope="col">Situação</th>
                       <th scope="col">Cadastro</th>
-                      {can('atendimentos:consultar') && (
+                      {(can('atendimentos:consultar') ||
+                        can('planos:consultar')) && (
                         <th scope="col">
                           <span className="sr-only">Ações</span>
                         </th>
@@ -246,15 +247,27 @@ export function Alunos() {
                         <td className="date-cell">
                           {formatDate(aluno.dataCadastro)}
                         </td>
-                        {can('atendimentos:consultar') && (
+                        {(can('atendimentos:consultar') ||
+                          can('planos:consultar')) && (
                           <td>
-                            <Link
-                              to={`/historico?aluno=${aluno.idAluno}`}
-                              className="row-action"
-                              aria-label={`Ver histórico de ${aluno.nome}`}
-                            >
-                              <ArrowRight size={18} />
-                            </Link>
+                            {can('planos:consultar') && (
+                              <Link
+                                to={`/alunos/${aluno.idAluno}/planos`}
+                                className="text-button"
+                                aria-label={`Ver planos de ${aluno.nome}`}
+                              >
+                                Planos de ação
+                              </Link>
+                            )}
+                            {can('atendimentos:consultar') && (
+                              <Link
+                                to={`/historico?aluno=${aluno.idAluno}`}
+                                className="row-action"
+                                aria-label={`Ver histórico de ${aluno.nome}`}
+                              >
+                                <ArrowRight size={18} />
+                              </Link>
+                            )}
                           </td>
                         )}
                       </tr>

@@ -31,6 +31,7 @@ import { Alunos } from './pages/Alunos'
 import { CadastroAluno } from './pages/CadastroAluno'
 import { AtendimentoForm } from './pages/AtendimentoForm'
 import { Historico } from './pages/Historico'
+import { PlanosAcao } from './pages/PlanosAcao'
 import './App.css'
 
 function Logo() {
@@ -311,6 +312,24 @@ function Layout() {
                 <Guard permission="atendimentos:consultar">
                   <Guard permission="alunos:consultar">
                     <Historico />
+                  </Guard>
+                </Guard>
+              }
+            />
+            <Route
+              path="/alunos/:idAluno/planos"
+              element={
+                <Guard permission="planos:consultar">
+                  <PlanosAcao />
+                </Guard>
+              }
+            />
+            <Route
+              path="/alunos/:idAluno/planos/novo"
+              element={
+                <Guard permission="planos:cadastrar">
+                  <Guard permission="planos:consultar">
+                    <PlanosAcao novo />
                   </Guard>
                 </Guard>
               }
