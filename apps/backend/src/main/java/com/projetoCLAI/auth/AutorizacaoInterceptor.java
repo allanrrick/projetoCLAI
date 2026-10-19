@@ -33,7 +33,9 @@ public class AutorizacaoInterceptor implements HandlerInterceptor {
         if (!"GET".equalsIgnoreCase(metodo) && !"HEAD".equalsIgnoreCase(metodo)) {
             String csrfHeader = request.getHeader(AuthController.CSRF_HEADER_NAME);
             String csrfSessao = (String) session.getAttribute(AuthController.ATTR_CSRF_TOKEN);
-            if (csrfHeader != null && csrfSessao != null && !csrfSessao.equals(csrfHeader)) {
+            boolean plano = request.getRequestURI().startsWith("/planos-acao");
+            if ((plano && (csrfHeader == null || csrfSessao == null))
+                    || (csrfHeader != null && csrfSessao != null && !csrfSessao.equals(csrfHeader))) {
                 escreverErro(response, HttpServletResponse.SC_FORBIDDEN,
                         "Token de segurança inválido. Atualize a página e tente novamente.");
                 return false;
@@ -44,7 +46,9 @@ public class AutorizacaoInterceptor implements HandlerInterceptor {
         PerfilUsuario perfil = PerfilUsuario.fromString(perfilStr);
         String permissaoNecessaria = resolverPermissao(request.getRequestURI(), metodo);
 
-        if (permissaoNecessaria != null && !perfil.getPermissoes().contains(permissaoNecessaria)) {
+        if (permissaoNecessaria != null && (!perfil.getPermissoes().contains(permissaoNecessaria)
+                || (permissaoNecessaria.startsWith("planos:")
+                    && !PerfilUsuario.PROFISSIONAL_CLAI.name().equals(perfilStr)))) {
             escreverErro(response, HttpServletResponse.SC_FORBIDDEN,
                     "Você não tem permissão para realizar esta ação.");
             return false;

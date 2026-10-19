@@ -126,6 +126,49 @@ class PlanoAcaoApiTests {
         assertEquals(quantidade, planoRepository.count());
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"GET", "POST"})
+    void bloqueiaSemSessao(String metodo) throws Exception {
+        var requisicao = metodo.equals("GET")
+                ? get("/planos-acao/aluno/{id}", aluno.getIdAluno()) : post("/planos-acao");
+        mockMvc.perform(requisicao.contentType(MediaType.APPLICATION_JSON)
+                        .content(json.writeValueAsString(dadosValidos())))
+                .andExpect(status().isUnauthorized());
+        assertEquals(0, planoRepository.count());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"GET", "POST"})
+    void bloqueiaAssistente(String metodo) throws Exception {
+        sessao.setAttribute(AuthController.ATTR_USUARIO_PERFIL, "ASSISTENTE");
+        var requisicao = metodo.equals("GET")
+                ? get("/planos-acao/aluno/{id}", aluno.getIdAluno()) : post("/planos-acao");
+        mockMvc.perform(requisicao.session(sessao).header("X-CSRF-TOKEN", "csrf-plano")
+                        .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(dadosValidos())))
+                .andExpect(status().isForbidden());
+        assertEquals(0, planoRepository.count());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", "token-incorreto"})
+    void exigeTokenDeSegurancaParaCadastrar(String token) throws Exception {
+        var requisicao = post("/planos-acao").session(sessao)
+                .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(dadosValidos()));
+        if (!token.isEmpty()) requisicao.header("X-CSRF-TOKEN", token);
+        mockMvc.perform(requisicao).andExpect(status().isForbidden());
+        assertEquals(0, planoRepository.count());
+    }
+
+    @Test
+    void bloqueiaPerfilAusenteOuDesconhecidoNaConsulta() throws Exception {
+        sessao.removeAttribute(AuthController.ATTR_USUARIO_PERFIL);
+        mockMvc.perform(get("/planos-acao/aluno/{id}", aluno.getIdAluno()).session(sessao))
+                .andExpect(status().isForbidden());
+        sessao.setAttribute(AuthController.ATTR_USUARIO_PERFIL, "INVALIDO");
+        mockMvc.perform(get("/planos-acao/aluno/{id}", aluno.getIdAluno()).session(sessao))
+                .andExpect(status().isForbidden());
+    }
+
     private Map<String, Object> dadosValidos() {
         Map<String, Object> dados = new LinkedHashMap<>();
         dados.put("idAluno", aluno.getIdAluno());
