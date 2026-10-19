@@ -81,7 +81,4 @@ O fluxo de branches (Git Flow) e o padrão de commits estão descritos em [CONTR
 
 ## Equipe
 
-Pedro Rennan
-Allan Rick
-Jhean Lucas
-Rhamede Maciel
+Pedro Rennan, Allan Rick, Jhean Lucas, Rhamede Maciel
