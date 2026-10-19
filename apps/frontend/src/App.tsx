@@ -75,6 +75,8 @@ function Acesso() {
     'alunos:cadastrar': 'Cadastrar alunos',
     'atendimentos:consultar': 'Consultar o histórico de atendimentos',
     'atendimentos:cadastrar': 'Registrar atendimentos',
+    'planos:consultar': 'Consultar planos de ação',
+    'planos:cadastrar': 'Registrar planos de ação',
   }
   return (
     <>

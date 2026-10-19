@@ -6,6 +6,8 @@ import type {
   NovoAluno,
   NovoAtendimento,
   NovoUsuario,
+  NovoPlanoAcao,
+  PlanoAcao,
   Session,
 } from '../types'
 
@@ -220,6 +222,31 @@ export const api = {
     return demo
       ? (await demo).cadastrarAluno(input)
       : request<Aluno>('/alunos', {
+          method: 'POST',
+          body: JSON.stringify(input),
+        })
+  },
+  async aluno(id: number, signal?: AbortSignal): Promise<Aluno> {
+    if (demo) {
+      const aluno = (await demo).getAlunos().find((item) => item.idAluno === id)
+      if (!aluno) throw new ApiError('Aluno não encontrado.', 404)
+      return aluno
+    }
+    return request<Aluno>(`/alunos/${id}`, { signal })
+  },
+  async planos(idAluno: number, signal?: AbortSignal): Promise<PlanoAcao[]> {
+    if (demo) return (await demo).getPlanos(idAluno)
+    const result = await request<PlanoAcao[]>(`/planos-acao/aluno/${idAluno}`, {
+      signal,
+    })
+    if (!Array.isArray(result))
+      throw new ApiError('Não foi possível carregar os planos.')
+    return result
+  },
+  async cadastrarPlano(input: NovoPlanoAcao): Promise<PlanoAcao> {
+    return demo
+      ? (await demo).cadastrarPlano(input)
+      : request<PlanoAcao>('/planos-acao', {
           method: 'POST',
           body: JSON.stringify(input),
         })
