@@ -5,6 +5,8 @@ import type {
   NovoAluno,
   NovoAtendimento,
   NovoUsuario,
+  NovoPlanoAcao,
+  PlanoAcao,
   Permission,
   Session,
 } from '../types'
@@ -16,6 +18,8 @@ const fullPermissions: Permission[] = [
   'alunos:cadastrar',
   'atendimentos:consultar',
   'atendimentos:cadastrar',
+  'planos:consultar',
+  'planos:cadastrar',
 ]
 
 export const session: Session = {
@@ -34,6 +38,25 @@ export function cadastrarUsuario(input: NovoUsuario): Session {
     perfil: input.perfil || 'PROFISSIONAL_CLAI',
     permissoes,
   }
+}
+
+const planos: PlanoAcao[] = []
+
+export function getPlanos(idAluno: number): PlanoAcao[] {
+  return planos.filter((plano) => plano.idAluno === idAluno)
+}
+
+export function cadastrarPlano(input: NovoPlanoAcao): PlanoAcao {
+  if (!alunos.some((aluno) => aluno.idAluno === input.idAluno))
+    throw new ApiError('Aluno não encontrado.', 404)
+  const plano = {
+    ...input,
+    idPlanoAcao: planos.length + 1,
+    autorNome: 'Profissional de demonstração',
+    dataCriacao: new Date().toISOString(),
+  }
+  planos.unshift(plano)
+  return plano
 }
 // Somente dados fictícios, mantidos em memória. Recarregar a página restaura os exemplos.
 const alunos: Aluno[] = [

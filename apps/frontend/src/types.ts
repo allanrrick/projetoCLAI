@@ -3,6 +3,8 @@ export type Permission =
   | 'alunos:cadastrar'
   | 'atendimentos:consultar'
   | 'atendimentos:cadastrar'
+  | 'planos:consultar'
+  | 'planos:cadastrar'
 export type PerfilAcesso = 'PROFISSIONAL_CLAI' | 'ASSISTENTE'
 export type Session = {
   nome: string
@@ -52,4 +54,36 @@ export type NovoAtendimento = Pick<
 > & {
   matricula: string
   documentos: File[]
+}
+
+export type NovoPlanoAcao = {
+  idAluno: number
+  periodoLetivo: string
+  periodoIngresso: string | null
+  dataNascimento: string | null
+  telefoneAluno: string | null
+  nomeResponsavel: string | null
+  parentescoResponsavel: string | null
+  telefoneResponsavel: string | null
+  emailResponsavel: string | null
+  possuiComorbidade: boolean
+  comorbidades: string | null
+  usaMedicacaoContinua: boolean
+  medicacoes: string | null
+  frequentaServicosApoio: boolean
+  servicosApoio: string | null
+  apresentouDocumentos: boolean
+  documentosComprobatorios: string | null
+  necessidadesEspecificas: string
+  percursoEducacional: string
+  principaisDemandas: string
+  propostasIntervencao: string
+  nomeCoordenador: string
+  dataDocumento: string
+}
+
+export type PlanoAcao = NovoPlanoAcao & {
+  idPlanoAcao: number
+  autorNome: string
+  dataCriacao: string
 }

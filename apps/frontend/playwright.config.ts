@@ -22,7 +22,12 @@ export default defineConfig({
     },
     {
       name: 'api',
-      testMatch: 'api.spec.ts',
+      testMatch: ['api.spec.ts', 'planos.spec.ts'],
+      use: { baseURL: 'http://127.0.0.1:5174' },
+    },
+    {
+      name: 'planos-integrados',
+      testMatch: 'planos-integracao.spec.ts',
       use: { baseURL: 'http://127.0.0.1:5174' },
     },
   ],

@@ -1333,3 +1333,15 @@ hr {
     font-size: 10px;
   }
 }
+.plano-detalhes {
+  margin-top: 24px;
+}
+.plano-detalhes summary {
+  padding: 22px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.plano-texto {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
