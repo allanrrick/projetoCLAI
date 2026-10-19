@@ -1,5 +1,37 @@
 import { test, expect } from '@playwright/test'
 
+test('planos em demonstração usam memória e informam que os dados são fictícios', async ({
+  page,
+}) => {
+  await page.goto('/alunos/1/planos/novo')
+  await expect(page.locator('.demo-banner')).toContainText('dados fictícios')
+  await page.locator('#periodoLetivo').fill('2026.2')
+  for (const nome of [
+    'possuiComorbidade',
+    'usaMedicacaoContinua',
+    'frequentaServicosApoio',
+    'apresentouDocumentos',
+  ])
+    await page.locator(`#${nome}`).selectOption('nao')
+  for (const nome of [
+    'necessidadesEspecificas',
+    'percursoEducacional',
+    'principaisDemandas',
+    'propostasIntervencao',
+  ])
+    await page.locator(`#${nome}`).fill('Plano fictício de demonstração.')
+  await page.locator('#nomeCoordenador').fill('Coordenação de demonstração')
+  await page.getByRole('button', { name: 'Salvar plano de ação' }).click()
+  await page.locator('summary').click()
+  await expect(page.locator('.plano-texto').first()).toHaveText(
+    'Plano fictício de demonstração.',
+  )
+  await page.reload()
+  await expect(
+    page.getByRole('heading', { name: 'Nenhum plano cadastrado' }),
+  ).toBeVisible()
+})
+
 test('lista alunos e combina busca, curso e situação', async ({ page }) => {
   await page.goto('/alunos')
   await expect(
