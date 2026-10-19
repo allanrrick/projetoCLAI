@@ -8,4 +8,5 @@ import java.util.List;
 @Repository
 public interface AtendimentoRepository extends JpaRepository<Atendimento, Long> {
     List<Atendimento> findByAlunoMatricula(String matricula);
+	List<Atendimento> findByAlunoMatriculaOrderByDataDescHoraDesc(String matricula);
 }

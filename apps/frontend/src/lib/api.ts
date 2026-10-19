@@ -2,6 +2,7 @@ import type {
   Aluno,
   Atendimento,
   Documento,
+  HistoricoParams,
   NovoAluno,
   NovoAtendimento,
   NovoUsuario,
@@ -104,17 +105,24 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
       ...options,
       credentials: 'include',
       headers,
-      signal: AbortSignal.timeout(15000),
+      signal: options.signal
+        ? AbortSignal.any([options.signal, AbortSignal.timeout(15000)])
+        : AbortSignal.timeout(15000),
       redirect: 'error',
     })
-  } catch {
+  } catch (reason) {
+    if (options.signal?.aborted) throw reason
     throw new ApiError(
       'Não foi possível conectar ao servidor. Verifique a conexão e tente novamente.',
     )
   }
+  const contentType = response.headers.get('content-type') || ''
+  const isJson =
+    contentType.includes('application/json') ||
+    contentType.includes('application/problem+json')
   if (!response.ok) {
     let detail = ''
-    if (response.headers.get('content-type')?.includes('application/json')) {
+    if (isJson) {
       const parsed = await response.json().catch(() => ({}))
       const body = parsed && typeof parsed === 'object' ? parsed : {}
       detail =
@@ -159,7 +167,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     )
   }
   if (response.status === 204) return undefined as T
-  if (!response.headers.get('content-type')?.includes('application/json')) {
+  if (!isJson) {
     throw new ApiError(
       'O servidor retornou uma resposta inesperada. Tente entrar novamente.',
     )
@@ -219,11 +227,20 @@ export const api = {
   async atendimentos(
     idAluno: number,
     matricula?: string,
+    params: HistoricoParams = {},
+    signal?: AbortSignal,
   ): Promise<Atendimento[]> {
-    if (demo) return (await demo).getAtendimentos(idAluno)
+    if (demo) return (await demo).getAtendimentos(idAluno, params)
     const chave = matricula ? encodeURIComponent(matricula) : String(idAluno)
+    const query = new URLSearchParams()
+    if (params.q?.trim()) query.set('q', params.q.trim())
+    if (params.inicio) query.set('inicio', params.inicio)
+    if (params.fim) query.set('fim', params.fim)
+    if (params.ordem) query.set('ordem', params.ordem)
+    const search = query.toString()
     const result = await request<Record<string, unknown>[]>(
-      `/atendimentos/${chave}`,
+      `/atendimentos/${chave}${search ? `?${search}` : ''}`,
+      { signal },
     )
     if (!Array.isArray(result))
       throw new ApiError('Não foi possível carregar o histórico.')

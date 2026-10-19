@@ -5,6 +5,7 @@ import com.projetoCLAI.aluno.AlunoRepository;
 import com.projetoCLAI.atendimento.Atendimento;
 import com.projetoCLAI.atendimento.AtendimentoController;
 import com.projetoCLAI.atendimento.AtendimentoRepository;
+import com.projetoCLAI.atendimento.AtendimentoService;
 import com.projetoCLAI.atendimento.FileStorageService;
 import com.projetoCLAI.atendimento.atendimentoDTO.AtendimentoResponseDTO;
 import com.projetoCLAI.atendimento.atendimentoDTO.CadastroAtendimentoDTO;
@@ -128,7 +129,8 @@ class ProjetoClaiApplicationTests {
         when(alunoRepo.findByMatricula("2026001")).thenReturn(aluno);
         when(atendimentoRepo.save(any(Atendimento.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        AtendimentoController controller = new AtendimentoController(atendimentoRepo, alunoRepo, storage);
+        AtendimentoController controller = new AtendimentoController(
+                atendimentoRepo, alunoRepo, storage, new AtendimentoService(atendimentoRepo));
         MockHttpServletRequest req = new MockHttpServletRequest();
         MockHttpSession session = new MockHttpSession();
         session.setAttribute(AuthController.ATTR_USUARIO_NOME, "Coordenação CLAI");

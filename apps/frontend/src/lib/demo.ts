@@ -1,6 +1,7 @@
 import type {
   Aluno,
   Atendimento,
+  HistoricoParams,
   NovoAluno,
   NovoAtendimento,
   NovoUsuario,
@@ -8,6 +9,7 @@ import type {
   Session,
 } from '../types'
 import { ApiError } from './api'
+import { normalize } from './format'
 
 const fullPermissions: Permission[] = [
   'alunos:consultar',
@@ -105,8 +107,33 @@ const atendimentos: Atendimento[] = [
   },
 ]
 export const getAlunos = () => structuredClone(alunos)
-export const getAtendimentos = (id: number) =>
-  structuredClone(atendimentos.filter((item) => item.idAluno === id))
+export function getAtendimentos(id: number, params: HistoricoParams = {}) {
+  const { inicio, fim, ordem = 'desc' } = params
+  if (inicio && fim && inicio > fim)
+    throw new ApiError(
+      'A data final deve ser igual ou posterior à data inicial.',
+      400,
+    )
+  const query = normalize(params.q?.trim() || '')
+  return structuredClone(
+    atendimentos
+      .filter(
+        (item) =>
+          item.idAluno === id &&
+          (!inicio || item.data >= inicio) &&
+          (!fim || item.data <= fim) &&
+          (!query ||
+            normalize(item.observacoes).includes(query) ||
+            normalize(item.profissional).includes(query) ||
+            item.documentos.some((doc) => normalize(doc.nome).includes(query))),
+      )
+      .sort(
+        (a, b) =>
+          `${a.data}T${a.hora}`.localeCompare(`${b.data}T${b.hora}`) *
+          (ordem === 'desc' ? -1 : 1),
+      ),
+  )
+}
 export function cadastrarAluno(input: NovoAluno): Aluno {
   if (
     alunos.some(
