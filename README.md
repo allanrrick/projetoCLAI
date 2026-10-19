@@ -78,3 +78,10 @@ npm run dev:demo
 ## Fluxo de Contribuição
 
 O fluxo de branches (Git Flow) e o padrão de commits estão descritos em [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Equipe
+
+Pedro Rennan
+Allan Rick
+Jhean Lucas
+Rhamede Maciel
