@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 
-export function useResource<T>(load: () => Promise<T>) {
+export function useResource<T>(load: (signal: AbortSignal) => Promise<T>) {
   const [result, setResult] = useState<{
-    load: () => Promise<T>
+    load: (signal: AbortSignal) => Promise<T>
     revision: number
     data: T | null
     error: string
@@ -10,12 +10,13 @@ export function useResource<T>(load: () => Promise<T>) {
   const [revision, setRevision] = useState(0)
   useEffect(() => {
     let active = true
-    load()
+    const controller = new AbortController()
+    load(controller.signal)
       .then((data) => {
         if (active) setResult({ load, revision, data, error: '' })
       })
       .catch((reason: unknown) => {
-        if (active)
+        if (active && !controller.signal.aborted)
           setResult({
             load,
             revision,
@@ -28,6 +29,7 @@ export function useResource<T>(load: () => Promise<T>) {
       })
     return () => {
       active = false
+      controller.abort()
     }
   }, [load, revision])
   const loading = result?.load !== load || result?.revision !== revision

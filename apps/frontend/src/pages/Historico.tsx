@@ -1,12 +1,12 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { CalendarDays, Clock3, FileText, Plus, Search } from 'lucide-react'
 import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { api } from '../lib/api'
-import { formatDate, initials, normalize, safeDocumentUrl } from '../lib/format'
+import { formatDate, initials, safeDocumentUrl } from '../lib/format'
 import { useResource } from '../hooks/useResource'
 import { useAuth } from '../context'
 import { Empty, Loading, Notice, PageTitle } from '../components/common'
-import type { Aluno } from '../types'
+import type { Aluno, Atendimento } from '../types'
 
 export function Historico() {
   const [params, setParams] = useSearchParams()
@@ -87,29 +87,48 @@ export function Historico() {
 function StudentHistory({ aluno }: { aluno: Aluno }) {
   const location = useLocation()
   const [sort, setSort] = useState<'asc' | 'desc'>('desc')
-  const load = useCallback(
-    () => api.atendimentos(aluno.idAluno, aluno.matricula, { ordem: sort }),
-    [aluno.idAluno, aluno.matricula, sort],
-  )
-  const { data, loading, error, retry } = useResource(load)
   const [query, setQuery] = useState('')
+  const [debouncedQuery, setDebouncedQuery] = useState('')
   const [start, setStart] = useState('')
   const [end, setEnd] = useState('')
+  const invalidDates = Boolean(start && end && start > end)
+  useEffect(() => {
+    const timeout = window.setTimeout(
+      () => setDebouncedQuery(query.trim()),
+      300,
+    )
+    return () => window.clearTimeout(timeout)
+  }, [query])
+  const load = useCallback(
+    (signal: AbortSignal) =>
+      invalidDates
+        ? Promise.resolve<Atendimento[]>([])
+        : api.atendimentos(
+            aluno.idAluno,
+            aluno.matricula,
+            { q: debouncedQuery, inicio: start, fim: end, ordem: sort },
+            signal,
+          ),
+    [
+      aluno.idAluno,
+      aluno.matricula,
+      debouncedQuery,
+      start,
+      end,
+      sort,
+      invalidDates,
+    ],
+  )
+  const { data, loading, error, retry } = useResource(load)
   const [success, setSuccess] = useState(
     location.state?.success as string | undefined,
   )
-  const invalidDates = Boolean(start && end && start > end)
-  const filtered = (data || []).filter(
-    (item) =>
-      item.idAluno === aluno.idAluno &&
-      normalize(
-        `${item.observacoes} ${item.profissional} ${item.documentos.map((doc) => doc.nome).join(' ')}`,
-      ).includes(normalize(query.trim())) &&
-      (!start || item.data >= start) &&
-      (!end || item.data <= end),
-  )
+  const atendimentos = data || []
+  const historyLoading = loading || query.trim() !== debouncedQuery
+  const hasFilters = Boolean(debouncedQuery || start || end)
   function reset() {
     setQuery('')
+    setDebouncedQuery('')
     setStart('')
     setEnd('')
     setSort('desc')
@@ -142,9 +161,12 @@ function StudentHistory({ aluno }: { aluno: Aluno }) {
         </div>
         <div className="history-filters">
           <div className="search-field">
-            <Search size={18} />
+            <label htmlFor="busca-historico" className="sr-only">
+              Buscar no histórico
+            </label>
+            <Search size={18} aria-hidden="true" />
             <input
-              aria-label="Buscar no histórico"
+              id="busca-historico"
               value={query}
               placeholder="Buscar nas observações, profissional ou anexos"
               onChange={(event) => setQuery(event.target.value)}
@@ -157,6 +179,10 @@ function StudentHistory({ aluno }: { aluno: Aluno }) {
                 id="inicio"
                 type="date"
                 value={start}
+                aria-invalid={invalidDates || undefined}
+                aria-describedby={
+                  invalidDates ? 'historico-periodo-erro' : undefined
+                }
                 onChange={(event) => setStart(event.target.value)}
               />
             </div>
@@ -167,6 +193,10 @@ function StudentHistory({ aluno }: { aluno: Aluno }) {
                 type="date"
                 value={end}
                 min={start || undefined}
+                aria-invalid={invalidDates || undefined}
+                aria-describedby={
+                  invalidDates ? 'historico-periodo-erro' : undefined
+                }
                 onChange={(event) => setEnd(event.target.value)}
               />
             </div>
@@ -183,7 +213,7 @@ function StudentHistory({ aluno }: { aluno: Aluno }) {
                 <option value="asc">Mais antigos primeiro</option>
               </select>
             </div>
-            {(query || start || end) && (
+            {(query || start || end || sort !== 'desc') && (
               <button className="text-button" onClick={reset}>
                 Limpar filtros
               </button>
@@ -192,10 +222,22 @@ function StudentHistory({ aluno }: { aluno: Aluno }) {
         </div>
         {invalidDates && (
           <Notice>
-            A data final deve ser igual ou posterior à data inicial.
+            <span id="historico-periodo-erro">
+              A data final deve ser igual ou posterior à data inicial.
+            </span>
           </Notice>
         )}
-        {loading ? (
+        <p className="result-count" aria-live="polite" aria-atomic="true">
+          {!historyLoading && !error && !invalidDates && (
+            <>
+              {atendimentos.length}{' '}
+              {atendimentos.length === 1
+                ? 'atendimento encontrado'
+                : 'atendimentos encontrados'}
+            </>
+          )}
+        </p>
+        {invalidDates ? null : historyLoading ? (
           <Loading />
         ) : error ? (
           <div className="panel-body">
@@ -204,28 +246,22 @@ function StudentHistory({ aluno }: { aluno: Aluno }) {
               Tentar novamente
             </button>
           </div>
-        ) : invalidDates ? null : filtered.length === 0 ? (
+        ) : atendimentos.length === 0 ? (
           <Empty
             title={
-              data?.length
+              hasFilters
                 ? 'Nenhum atendimento encontrado'
                 : 'Ainda não há atendimentos para este aluno'
             }
           >
-            {data?.length
+            {hasFilters
               ? 'Ajuste a busca ou o período selecionado.'
               : 'Os atendimentos registrados aparecerão aqui.'}
           </Empty>
         ) : (
           <>
-            <p className="result-count" aria-live="polite">
-              {filtered.length}{' '}
-              {filtered.length === 1
-                ? 'atendimento encontrado'
-                : 'atendimentos encontrados'}
-            </p>
             <ol className="timeline">
-              {filtered.map((item) => (
+              {atendimentos.map((item) => (
                 <li key={item.idAtendimento}>
                   <span className="timeline-dot">
                     <CalendarDays size={17} />
