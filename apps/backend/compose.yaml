@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: projeto-clai-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: claiDB
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
