@@ -1,6 +1,7 @@
 package com.projetoCLAI.aluno;
 
 import com.projetoCLAI.atendimento.Atendimento;
+import com.projetoCLAI.relatorio.RelatorioAcompanhamento;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -36,6 +37,9 @@ public class Aluno {
 
     @OneToMany(mappedBy = "aluno", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Atendimento> atendimentos = new ArrayList<>();
+
+    @OneToMany(mappedBy = "aluno")
+    private List<RelatorioAcompanhamento> relatorios = new ArrayList<>();
 
     public Aluno() {
     }
