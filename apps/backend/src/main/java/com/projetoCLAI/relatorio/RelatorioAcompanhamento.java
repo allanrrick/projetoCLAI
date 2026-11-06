@@ -6,6 +6,8 @@ import jakarta.persistence.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "relatorios_acompanhamento", schema = "public")
@@ -56,6 +58,11 @@ public class RelatorioAcompanhamento {
 
     @Column(name = "criado_em", insertable = false, updatable = false)
     private LocalDateTime criadoEm;
+
+    @OneToMany(mappedBy = "relatorio",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true)
+    private List<RelatorioAspecto> aspectos = new ArrayList<>();
 
     public Long getId() {
         return id;
