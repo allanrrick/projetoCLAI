@@ -64,6 +64,27 @@ public class RelatorioAcompanhamento {
             orphanRemoval = true)
     private List<RelatorioAspecto> aspectos = new ArrayList<>();
 
+    @OneToMany(mappedBy = "relatorio",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true)
+    private List<RelatorioHabilidade> habilidades = new ArrayList<>();
+
+    public List<RelatorioAspecto> getAspectos() {
+        return aspectos;
+    }
+
+    public void setAspectos(List<RelatorioAspecto> aspectos) {
+        this.aspectos = aspectos;
+    }
+
+    public List<RelatorioHabilidade> getHabilidades() {
+        return habilidades;
+    }
+
+    public void setHabilidades(List<RelatorioHabilidade> habilidades) {
+        this.habilidades = habilidades;
+    }
+
     public Long getId() {
         return id;
     }
