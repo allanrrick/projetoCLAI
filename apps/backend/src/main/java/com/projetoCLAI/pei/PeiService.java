@@ -6,9 +6,11 @@ import com.projetoCLAI.pei.DTO.CadastrarPeiDTO;
 import com.projetoCLAI.pei.repository.PeiRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -32,22 +34,25 @@ public class PeiService {
 
         Pei pei = new Pei();
         pei.setAluno(aluno);
-        pei.setDataCriacao(dto.dataCriacao());
+        pei.setDataCriacao(LocalDate.now());
         pei.setDificuldades(dto.dificuldades());
         pei.setHistorico(dto.historico());
         pei.setNecessidadesEspecificas(dto.necessidades());
         pei.setPeriodoLetivo(dto.periodoLetivo());
         pei.setPropostasAdaptacao(dto.propostas());
 
-        if (dto.afinidades() != null) {
-            List<Afinidades> lista = dto.afinidades().stream().map(afinidadeDTO -> {
-                Afinidades afinidade = new Afinidades();
-                afinidade.setAfinidade(afinidadeDTO.afinidade());
-                afinidade.setPei(pei);
-                return afinidade;
+        if (dto.afinidades() != null && !dto.afinidades().isEmpty()) {
+            List<Afinidades> listaAfinidades = dto.afinidades().stream().map(itemDTO -> {
+                Afinidades af = new Afinidades();
+                af.setAfinidade(itemDTO.afinidade());
+
+                af.setPei(pei);
+
+                return af;
             }).toList();
 
-            pei.getAfinidades().addAll(lista);
+
+            pei.getAfinidades().addAll(listaAfinidades);
         }
 
         Pei salvo = peiRepository.save(pei);

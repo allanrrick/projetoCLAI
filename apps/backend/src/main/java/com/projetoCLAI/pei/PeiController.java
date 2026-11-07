@@ -20,9 +20,9 @@ public class PeiController {
     }
 
     @PostMapping
-    public ResponseEntity<Long> cadastrar(@RequestBody @Valid CadastrarPeiDTO dto) {
+    public ResponseEntity<?> cadastrar(@RequestBody @Valid CadastrarPeiDTO dto) {
         Long idCriado = peiService.cadastrar(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(idCriado);
+        return ResponseEntity.status(HttpStatus.CREATED).body("Pei " +idCriado+ " criado com sucesso");
     }
 
 
