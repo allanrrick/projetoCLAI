@@ -3,6 +3,8 @@ export type Permission =
   | 'alunos:cadastrar'
   | 'atendimentos:consultar'
   | 'atendimentos:cadastrar'
+  | 'peis:consultar'
+  | 'peis:cadastrar'
 export type PerfilAcesso = 'PROFISSIONAL_CLAI' | 'ASSISTENTE'
 export type Session = {
   nome: string
@@ -52,4 +54,18 @@ export type NovoAtendimento = Pick<
 > & {
   matricula: string
   documentos: File[]
+}
+export type Pei = {
+  id: number
+  idAluno: number
+  matricula: string
+  necessidadesEspecificas: string
+  objetivos: string
+  estrategiasAcompanhamento: string
+}
+export type NovoPei = Pick<
+  Pei,
+  'idAluno' | 'necessidadesEspecificas' | 'objetivos' | 'estrategiasAcompanhamento'
+> & {
+  matricula: string
 }

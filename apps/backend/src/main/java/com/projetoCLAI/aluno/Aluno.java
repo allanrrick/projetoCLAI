@@ -1,6 +1,7 @@
 package com.projetoCLAI.aluno;
 
 import com.projetoCLAI.atendimento.Atendimento;
+import com.projetoCLAI.pei.Pei;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -36,6 +37,9 @@ public class Aluno {
 
     @OneToMany(mappedBy = "aluno", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Atendimento> atendimentos = new ArrayList<>();
+
+    @OneToMany(mappedBy = "aluno", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Pei> peis = new ArrayList<>();
 
     public Aluno() {
     }
@@ -99,6 +103,19 @@ public class Aluno {
     public void adicionarAtendimento(Atendimento atendimento) {
         this.atendimentos.add(atendimento);
         atendimento.setAluno(this);
+    }
+
+    public List<Pei> getPeis() {
+        return peis;
+    }
+
+    public void setPeis(List<Pei> peis) {
+        this.peis = peis;
+    }
+
+    public void adicionarPei(Pei pei) {
+        this.peis.add(pei);
+        pei.setAluno(this);
     }
 
 }

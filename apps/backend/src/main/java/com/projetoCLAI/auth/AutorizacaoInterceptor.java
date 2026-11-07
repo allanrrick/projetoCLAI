@@ -61,6 +61,9 @@ public class AutorizacaoInterceptor implements HandlerInterceptor {
         if (uri.startsWith("/atendimentos")) {
             return leitura ? "atendimentos:consultar" : "atendimentos:cadastrar";
         }
+        if (uri.startsWith("/peis")) {
+            return leitura ? "peis:consultar" : "peis:cadastrar";
+        }
         return null;
     }
 
@@ -71,4 +74,3 @@ public class AutorizacaoInterceptor implements HandlerInterceptor {
         response.getWriter().write("{\"Erro\":\"" + mensagem + "\"}");
     }
 }
-

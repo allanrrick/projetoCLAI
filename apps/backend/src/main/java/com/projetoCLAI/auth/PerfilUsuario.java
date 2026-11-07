@@ -7,7 +7,9 @@ public enum PerfilUsuario {
             "alunos:consultar",
             "alunos:cadastrar",
             "atendimentos:consultar",
-            "atendimentos:cadastrar"
+            "atendimentos:cadastrar",
+            "peis:consultar",
+            "peis:cadastrar"
     )),
     ASSISTENTE(List.of(
             "alunos:consultar"
@@ -34,4 +36,3 @@ public enum PerfilUsuario {
         return PROFISSIONAL_CLAI;
     }
 }
-
