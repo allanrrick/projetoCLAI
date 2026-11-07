@@ -18,7 +18,7 @@ public class Pei {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "aluno_id", nullable = false)
+    @JoinColumn(name = "aluno_matricula", nullable = false)
     @JsonIgnore
     private Aluno aluno;
 
