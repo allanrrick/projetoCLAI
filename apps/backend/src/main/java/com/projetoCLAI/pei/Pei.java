@@ -14,11 +14,11 @@ import java.util.List;
 public class Pei {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_pei")
+    @Column(name = "id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "aluno_matricula", nullable = false)
+    @JoinColumn(name = "aluno_matricula", referencedColumnName = "matricula", nullable = false)
     @JsonIgnore
     private Aluno aluno;
 
