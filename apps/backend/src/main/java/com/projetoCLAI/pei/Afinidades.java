@@ -1,5 +1,6 @@
 package com.projetoCLAI.pei;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
@@ -13,6 +14,7 @@ public class Afinidades {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pei_id")
+    @JsonIgnore
     private Pei pei;
 
     @Column(name = "afinidade")

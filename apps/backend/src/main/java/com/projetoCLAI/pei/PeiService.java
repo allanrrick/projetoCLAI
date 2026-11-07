@@ -8,6 +8,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
@@ -25,8 +26,8 @@ public class PeiService {
     }
 
     @Transactional
-    public Long cadastrar(CadastrarPeiDTO dto) {
-        Aluno aluno = alunoRepository.findByMatricula(dto.alunoMatricula());
+    public Long cadastrar(CadastrarPeiDTO dto, String matricula) {
+        Aluno aluno = alunoRepository.findByMatricula(matricula);
 
         if (aluno == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Aluno não encontrado");
@@ -57,5 +58,10 @@ public class PeiService {
 
         Pei salvo = peiRepository.save(pei);
         return salvo.getId();
+    }
+
+    @Transactional
+    public List<Pei> buscar(String matricula) {
+        return peiRepository.findByAluno_Matricula(matricula);
     }
 }

@@ -5,14 +5,13 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 
 @RestController
-@RequestMapping("/pei")
+@RequestMapping("/aluno/{matricula}/pei")
 public class PeiController {
 
     private final PeiService peiService;
@@ -23,14 +22,22 @@ public class PeiController {
 
     @PostMapping
     public ResponseEntity<?> cadastrar(@RequestBody @Valid CadastrarPeiDTO dto,
-                                        BindingResult result) {
+                                        BindingResult result,
+                                       @PathVariable String matricula
+                                       ) {
         if (result.hasErrors()) {
             String msgErro = result.getFieldErrors().get(0).getDefaultMessage();
 
             return ResponseEntity.badRequest().body(msgErro);
         }
-        Long idCriado = peiService.cadastrar(dto);
+        Long idCriado = peiService.cadastrar(dto, matricula);
         return ResponseEntity.status(HttpStatus.CREATED).body("Pei " +idCriado+ " criado com sucesso");
+    }
+
+    @GetMapping()
+    public ResponseEntity<List<Pei>> buscar(@PathVariable String matricula) {
+        List<Pei> peis = peiService.buscar(matricula);
+        return ResponseEntity.ok(peis);
     }
 
 
