@@ -4,10 +4,12 @@ import com.projetoCLAI.pei.DTO.CadastrarPeiDTO;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
 
 @RestController
 @RequestMapping("/pei")
@@ -20,7 +22,13 @@ public class PeiController {
     }
 
     @PostMapping
-    public ResponseEntity<?> cadastrar(@RequestBody @Valid CadastrarPeiDTO dto) {
+    public ResponseEntity<?> cadastrar(@RequestBody @Valid CadastrarPeiDTO dto,
+                                        BindingResult result) {
+        if (result.hasErrors()) {
+            String msgErro = result.getFieldErrors().get(0).getDefaultMessage();
+
+            return ResponseEntity.badRequest().body(msgErro);
+        }
         Long idCriado = peiService.cadastrar(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body("Pei " +idCriado+ " criado com sucesso");
     }
