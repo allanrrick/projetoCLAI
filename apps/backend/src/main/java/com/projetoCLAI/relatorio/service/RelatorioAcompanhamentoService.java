@@ -10,8 +10,10 @@ import com.projetoCLAI.relatorio.dto.RelatorioAspectoDTO;
 import com.projetoCLAI.relatorio.dto.RelatorioHabilidadeDTO;
 import com.projetoCLAI.relatorio.repository.RelatorioAcompanhamentoRepository;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class RelatorioAcompanhamentoService {
@@ -84,5 +86,11 @@ public class RelatorioAcompanhamentoService {
         }
 
         return relatorioRepository.save(relatorio);
+
     }
+
+        @Transactional(readOnly = true)
+        public List<RelatorioAcompanhamento> listarTodos() {
+            return relatorioRepository.findAll();
+        }
 }

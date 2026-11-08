@@ -10,6 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/relatorios")
 public class RelatorioAcompanhamentoController {
@@ -31,5 +33,10 @@ public class RelatorioAcompanhamentoController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(relatorio);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<RelatorioAcompanhamento>> listarTodos() {
+        return ResponseEntity.ok(relatorioService.listarTodos());
     }
 }
