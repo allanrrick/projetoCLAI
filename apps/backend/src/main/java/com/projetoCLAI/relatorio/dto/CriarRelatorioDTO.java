@@ -23,7 +23,7 @@ public record CriarRelatorioDTO(
         String comentarioSocioemocional,
 
         String avancosGerais,
-        String dificuldadesAprendizagem,
+        String relatoDificuldades,
         String fatoresExternos,
 
         @Valid
