@@ -39,4 +39,13 @@ public class RelatorioAcompanhamentoController {
     public ResponseEntity<List<RelatorioAcompanhamento>> listarTodos() {
         return ResponseEntity.ok(relatorioService.listarTodos());
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<RelatorioAcompanhamento> buscarPorId(
+            @PathVariable Long id) {
+
+        return ResponseEntity.ok(
+                relatorioService.buscarPorId(id)
+        );
+    }
 }

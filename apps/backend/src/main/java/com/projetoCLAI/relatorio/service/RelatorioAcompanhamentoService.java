@@ -10,8 +10,10 @@ import com.projetoCLAI.relatorio.dto.RelatorioAspectoDTO;
 import com.projetoCLAI.relatorio.dto.RelatorioHabilidadeDTO;
 import com.projetoCLAI.relatorio.repository.RelatorioAcompanhamentoRepository;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -93,4 +95,12 @@ public class RelatorioAcompanhamentoService {
         public List<RelatorioAcompanhamento> listarTodos() {
             return relatorioRepository.findAll();
         }
+
+    @Transactional(readOnly = true)
+    public RelatorioAcompanhamento buscarPorId(Long id) {
+        return relatorioRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND
+                ));
+    }
 }
