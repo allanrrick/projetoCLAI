@@ -5,6 +5,18 @@ import { useNavigate } from 'react-router-dom'
 import { api } from '../lib/api'
 import { BackLink, FormActions, Notice, PageTitle } from '../components/common'
 
+const CURSOS_DISPONIVEIS = [
+  'Análise e Desenvolvimento de Sistemas',
+  'Automação Industrial',
+  'Engenharia Civil',
+  'Engenharia de Controle e Automação',
+  'Licenciatura em Física',
+  'Licenciatura em Matemática',
+  'Técnico em Edificações',
+  'Técnico em Eletromecânica',
+  'Técnico em Informática',
+] as const
+
 export function CadastroAluno() {
   const navigate = useNavigate()
   const [error, setError] = useState('')
@@ -100,13 +112,14 @@ export function CadastroAluno() {
                 </div>
                 <div className="field full">
                   <label htmlFor="curso">Curso *</label>
-                  <input
-                    id="curso"
-                    name="curso"
-                    placeholder="Nome do curso"
-                    maxLength={100}
-                    required
-                  />
+                  <select id="curso" name="curso" defaultValue="" required>
+                    <option value="">Selecione o curso</option>
+                    {CURSOS_DISPONIVEIS.map((curso) => (
+                      <option key={curso} value={curso}>
+                        {curso}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
             </fieldset>
@@ -117,25 +130,6 @@ export function CadastroAluno() {
             />
           </form>
         </section>
-        <aside className="form-aside">
-          <span className="eyebrow">UM CADASTRO, UMA TRAJETÓRIA</span>
-          <h2>
-            Conhecer para
-            <br />
-            acompanhar melhor.
-          </h2>
-          <p>
-            Confira os dados antes de salvar. Eles ajudam a identificar o aluno
-            e a manter seu acompanhamento organizado.
-          </p>
-          <div className="aside-note">
-            <strong>Evite cadastros duplicados</strong>
-            <p>
-              Cada aluno deve ter um único perfil. Se já houver cadastro,
-              consulte a lista de alunos.
-            </p>
-          </div>
-        </aside>
       </div>
     </>
   )

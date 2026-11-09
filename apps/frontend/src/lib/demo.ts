@@ -4,8 +4,14 @@ import type {
   HistoricoParams,
   NovoAluno,
   NovoAtendimento,
+  NovoPea,
+  NovoPei,
+  NovoRelatorio,
   NovoUsuario,
+  Pea,
+  Pei,
   Permission,
+  RelatorioAcompanhamento,
   Session,
 } from '../types'
 import { ApiError } from './api'
@@ -170,4 +176,136 @@ export function cadastrarAtendimento(input: NovoAtendimento): Atendimento {
   }
   atendimentos.push(atendimento)
   return structuredClone(atendimento)
+}
+const relatorios: RelatorioAcompanhamento[] = [
+  {
+    id: 1,
+    alunoId: 1,
+    periodoLetivo: '2026.2',
+    componenteCurricular: 'Estrutura de Dados',
+    docente: 'Prof. Carlos Mendes',
+    comentarioRelacionamento: 'Participa ativamente das aulas práticas.',
+    comentarioCognitivo: 'Boa assimilação com apoio de material visual.',
+    comentarioSocioemocional: 'Demonstra engajamento e autonomia.',
+    avancosGerais: 'Evolução consistente na resolução de exercícios.',
+    relatoDificuldades: 'Necessita de tempo adicional em avaliações escritas.',
+    fatoresExternos: '',
+    aspectos: [
+      {
+        id: 1,
+        grupo: 'RELACIONAMENTO',
+        opcao: 'Interage bem com colegas e docentes',
+      },
+      {
+        id: 2,
+        grupo: 'COGNITIVO',
+        opcao: 'Compreende os conceitos trabalhados',
+      },
+    ],
+    habilidades: [
+      {
+        id: 1,
+        ordem: 1,
+        habilidadeDesenvolvida: 'Implementação de listas encadeadas',
+        nivelAprendizado: 'OTIMO',
+        observacoes: 'Concluiu todas as atividades práticas.',
+      },
+    ],
+    parecer:
+      'Recomenda-se manter o acompanhamento semestral e o tempo adicional em provas.',
+    dataRelatorio: '2026-10-15',
+  },
+]
+export const getRelatorios = () => structuredClone(relatorios)
+export function cadastrarRelatorio(
+  input: NovoRelatorio,
+): RelatorioAcompanhamento {
+  if (!alunos.some((aluno) => aluno.idAluno === input.alunoId))
+    throw new ApiError('Aluno não encontrado.', 404)
+  const relatorio: RelatorioAcompanhamento = {
+    ...input,
+    id: relatorios.length + 1,
+  }
+  relatorios.unshift(relatorio)
+  return structuredClone(relatorio)
+}
+const peis: Pei[] = [
+  {
+    id: 1,
+    alunoMatricula: 'DEMO001',
+    periodoLetivo: '2026.2',
+    historico:
+      'Estudante ingressante pelo sistema de reserva de vagas, com acompanhamento contínuo da CLAI.',
+    necessidadesEspecificas:
+      'Ampliação de material didático e tempo adicional em avaliações.',
+    afinidades: [
+      { id: 1, afinidade: 'Desenvolvimento web e interfaces visuais' },
+      { id: 2, afinidade: 'Projetos práticos em equipe' },
+    ],
+    dificuldades: 'Leitura de textos extensos sem adaptação tipográfica.',
+    propostasAdaptacao:
+      'Disponibilização prévia de slides e roteiros práticos com fonte ampliada.',
+    dataCriacao: '2026-10-12',
+  },
+]
+export function getPeis(matricula: string): Pei[] {
+  return structuredClone(
+    peis.filter((item) => item.alunoMatricula === matricula),
+  )
+}
+export function cadastrarPei(input: NovoPei): Pei {
+  const aluno = alunos.find((item) => item.matricula === input.alunoMatricula)
+  if (!aluno) throw new ApiError('Aluno não encontrado.', 404)
+  const novo: Pei = {
+    id: peis.length + 1,
+    alunoMatricula: input.alunoMatricula,
+    periodoLetivo: input.periodoLetivo,
+    historico: input.historico,
+    necessidadesEspecificas: input.necessidades,
+    afinidades: input.afinidades.map((item, idx) => ({
+      id: idx + 1,
+      afinidade: item.afinidade,
+    })),
+    dificuldades: input.dificuldades,
+    propostasAdaptacao: input.propostas,
+    dataCriacao: new Date().toLocaleDateString('en-CA'),
+  }
+  peis.unshift(novo)
+  return structuredClone(novo)
+}
+const peas: Pea[] = [
+  {
+    id: 1,
+    alunoMatricula: 'DEMO001',
+    disciplina: 'Algoritmos e Programação',
+    periodoLetivo: '2026.2',
+    docente: 'Prof. Marcos Vieira',
+    objetivos: 'Desenvolver lógica de programação com exercícios guiados.',
+    conteudos: 'Estruturas condicionais, laços de repetição e funções.',
+    estrategiasEnsino: 'Uso de fluxogramas visuais e monitoria individualizada.',
+    avaliacaoAdaptada:
+      'Provas práticas em laboratório com tempo estendido em 50%.',
+    dataCriacao: '2026-10-14',
+  },
+]
+export function getPeas(matricula: string, disciplina?: string): Pea[] {
+  const termo = normalize(disciplina?.trim() || '')
+  return structuredClone(
+    peas.filter(
+      (item) =>
+        item.alunoMatricula === matricula &&
+        (!termo || normalize(item.disciplina).includes(termo)),
+    ),
+  )
+}
+export function cadastrarPea(input: NovoPea): Pea {
+  const aluno = alunos.find((item) => item.matricula === input.alunoMatricula)
+  if (!aluno) throw new ApiError('Aluno não encontrado.', 404)
+  const novo: Pea = {
+    ...input,
+    id: peas.length + 1,
+    dataCriacao: new Date().toLocaleDateString('en-CA'),
+  }
+  peas.unshift(novo)
+  return structuredClone(novo)
 }

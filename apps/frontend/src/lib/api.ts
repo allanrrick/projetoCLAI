@@ -5,7 +5,13 @@ import type {
   HistoricoParams,
   NovoAluno,
   NovoAtendimento,
+  NovoPea,
+  NovoPei,
+  NovoRelatorio,
   NovoUsuario,
+  Pea,
+  Pei,
+  RelatorioAcompanhamento,
   Session,
 } from '../types'
 
@@ -262,5 +268,73 @@ export const api = {
       body,
     })
     return mapAtendimento(result || {}, idAluno)
+  },
+  async relatorios(): Promise<RelatorioAcompanhamento[]> {
+    const result = demo
+      ? (await demo).getRelatorios()
+      : await request<RelatorioAcompanhamento[]>('/relatorios')
+    if (!Array.isArray(result))
+      throw new ApiError('Não foi possível carregar os relatórios.')
+    return result
+  },
+  async cadastrarRelatorio(
+    input: NovoRelatorio,
+  ): Promise<RelatorioAcompanhamento> {
+    return demo
+      ? (await demo).cadastrarRelatorio(input)
+      : request<RelatorioAcompanhamento>('/relatorios', {
+          method: 'POST',
+          body: JSON.stringify(input),
+        })
+  },
+  async peis(matricula: string): Promise<Pei[]> {
+    if (demo) return (await demo).getPeis(matricula)
+    const result = await request<Pei[]>(
+      `/aluno/${encodeURIComponent(matricula)}/pei`,
+    )
+    if (!Array.isArray(result))
+      throw new ApiError('Não foi possível carregar os registros de PEI.')
+    return result.map((item) => ({
+      ...item,
+      alunoMatricula: item.alunoMatricula || matricula,
+    }))
+  },
+  async cadastrarPei(input: NovoPei): Promise<void> {
+    if (demo) {
+      ;(await demo).cadastrarPei(input)
+      return
+    }
+    await request<unknown>(
+      `/aluno/${encodeURIComponent(input.alunoMatricula)}/pei`,
+      {
+        method: 'POST',
+        body: JSON.stringify(input),
+      },
+    )
+  },
+  async peas(matricula: string, disciplina?: string): Promise<Pea[]> {
+    if (demo) return (await demo).getPeas(matricula, disciplina)
+    const query = new URLSearchParams()
+    if (disciplina?.trim()) query.set('disciplina', disciplina.trim())
+    const search = query.toString()
+    const result = await request<Pea[]>(
+      `/aluno/${encodeURIComponent(matricula)}/pea${search ? `?${search}` : ''}`,
+    )
+    if (!Array.isArray(result))
+      throw new ApiError('Não foi possível carregar os registros de PEA.')
+    return result.map((item) => ({
+      ...item,
+      alunoMatricula: item.alunoMatricula || matricula,
+    }))
+  },
+  async cadastrarPea(input: NovoPea): Promise<Pea> {
+    if (demo) return (await demo).cadastrarPea(input)
+    return request<Pea>(
+      `/aluno/${encodeURIComponent(input.alunoMatricula)}/pea`,
+      {
+        method: 'POST',
+        body: JSON.stringify(input),
+      },
+    )
   },
 }

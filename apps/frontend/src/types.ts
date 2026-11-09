@@ -53,3 +53,73 @@ export type NovoAtendimento = Pick<
   matricula: string
   documentos: File[]
 }
+export type GrupoAspecto = 'RELACIONAMENTO' | 'COGNITIVO' | 'SOCIOEMOCIONAL'
+export type NivelAprendizado = 'SATISFATORIO' | 'BOM' | 'OTIMO'
+export type RelatorioAspecto = {
+  id?: number
+  grupo: GrupoAspecto
+  opcao: string
+  descricaoOutros?: string | null
+}
+export type RelatorioHabilidade = {
+  id?: number
+  ordem: number
+  habilidadeDesenvolvida: string
+  nivelAprendizado: NivelAprendizado
+  observacoes?: string | null
+}
+export type RelatorioAcompanhamento = {
+  id: number
+  alunoId: number
+  periodoLetivo: string
+  componenteCurricular: string
+  docente: string
+  comentarioRelacionamento?: string | null
+  comentarioCognitivo?: string | null
+  comentarioSocioemocional?: string | null
+  avancosGerais?: string | null
+  relatoDificuldades?: string | null
+  fatoresExternos?: string | null
+  aspectos: RelatorioAspecto[]
+  habilidades: RelatorioHabilidade[]
+  parecer: string
+  dataRelatorio: string
+}
+export type NovoRelatorio = Omit<RelatorioAcompanhamento, 'id'>
+export type PeiAfinidade = {
+  id?: number
+  afinidade: string
+}
+export type Pei = {
+  id: number
+  alunoMatricula: string
+  periodoLetivo: string
+  historico: string
+  necessidadesEspecificas: string
+  afinidades: PeiAfinidade[]
+  dificuldades: string
+  propostasAdaptacao: string
+  dataCriacao: string
+}
+export type NovoPei = {
+  alunoMatricula: string
+  periodoLetivo: string
+  historico: string
+  necessidades: string
+  afinidades: { afinidade: string }[]
+  dificuldades: string
+  propostas: string
+}
+export type Pea = {
+  id: number
+  alunoMatricula: string
+  disciplina: string
+  periodoLetivo: string
+  docente: string
+  objetivos: string
+  conteudos: string
+  estrategiasEnsino: string
+  avaliacaoAdaptada: string
+  dataCriacao: string
+}
+export type NovoPea = Omit<Pea, 'id' | 'dataCriacao'>
