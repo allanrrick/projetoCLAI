@@ -85,19 +85,20 @@ test('envia o contrato real de alunos, normaliza espaços e informa erro sem apa
   await page.goto('/alunos/novo')
   await page.getByLabel('Nome completo *').fill('  Pessoa teste  ')
   await page.getByLabel('Matrícula *').fill(' API001 ')
-  await page.getByLabel('Curso *').fill(' Curso teste ')
+  await page.getByLabel('Curso *').selectOption('Engenharia Civil')
   await page.getByRole('button', { name: 'Cadastrar aluno' }).click()
   await expect(page.getByRole('alert')).toContainText('Já existe um aluno')
   expect(payload).toEqual({
     nome: 'Pessoa teste',
     matricula: 'API001',
     email: null,
-    curso: 'Curso teste',
+    curso: 'Engenharia Civil',
   })
   expect(csrf).toBe('csrf-teste')
   await expect(page.getByLabel('Nome completo *')).toHaveValue(
     '  Pessoa teste  ',
   )
+  await expect(page.getByLabel('Curso *')).toHaveValue('Engenharia Civil')
 })
 
 test('esconde ações sem permissão e bloqueia a navegação direta sem consultar atendimentos', async ({
