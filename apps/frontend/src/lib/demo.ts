@@ -4,8 +4,10 @@ import type {
   HistoricoParams,
   NovoAluno,
   NovoAtendimento,
+  NovoPei,
   NovoRelatorio,
   NovoUsuario,
+  Pei,
   Permission,
   RelatorioAcompanhamento,
   Session,
@@ -224,4 +226,48 @@ export function cadastrarRelatorio(
   }
   relatorios.unshift(relatorio)
   return structuredClone(relatorio)
+}
+const peis: Pei[] = [
+  {
+    id: 1,
+    alunoMatricula: 'DEMO001',
+    periodoLetivo: '2026.2',
+    historico:
+      'Estudante ingressante pelo sistema de reserva de vagas, com acompanhamento contínuo da CLAI.',
+    necessidadesEspecificas:
+      'Ampliação de material didático e tempo adicional em avaliações.',
+    afinidades: [
+      { id: 1, afinidade: 'Desenvolvimento web e interfaces visuais' },
+      { id: 2, afinidade: 'Projetos práticos em equipe' },
+    ],
+    dificuldades: 'Leitura de textos extensos sem adaptação tipográfica.',
+    propostasAdaptacao:
+      'Disponibilização prévia de slides e roteiros práticos com fonte ampliada.',
+    dataCriacao: '2026-10-12',
+  },
+]
+export function getPeis(matricula: string): Pei[] {
+  return structuredClone(
+    peis.filter((item) => item.alunoMatricula === matricula),
+  )
+}
+export function cadastrarPei(input: NovoPei): Pei {
+  const aluno = alunos.find((item) => item.matricula === input.alunoMatricula)
+  if (!aluno) throw new ApiError('Aluno não encontrado.', 404)
+  const novo: Pei = {
+    id: peis.length + 1,
+    alunoMatricula: input.alunoMatricula,
+    periodoLetivo: input.periodoLetivo,
+    historico: input.historico,
+    necessidadesEspecificas: input.necessidades,
+    afinidades: input.afinidades.map((item, idx) => ({
+      id: idx + 1,
+      afinidade: item.afinidade,
+    })),
+    dificuldades: input.dificuldades,
+    propostasAdaptacao: input.propostas,
+    dataCriacao: new Date().toLocaleDateString('en-CA'),
+  }
+  peis.unshift(novo)
+  return structuredClone(novo)
 }

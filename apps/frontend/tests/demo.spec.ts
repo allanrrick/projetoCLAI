@@ -206,7 +206,9 @@ test('preenche e registra relatório de acompanhamento individualizado', async (
   await page.getByLabel('Componente curricular *').fill('Banco de Dados I')
   await page.getByLabel('Docente *').fill('Prof. Ricardo Alves')
   await page.getByLabel('Interage bem com colegas e docentes').check()
-  await page.getByLabel('Habilidade 1').fill('Modelagem relacional')
+  await page
+    .getByLabel('Habilidade 1', { exact: true })
+    .fill('Modelagem relacional')
   await page.getByLabel('Nível de aprendizado 1').selectOption('OTIMO')
   await page
     .getByLabel('Parecer conclusivo *')
@@ -220,5 +222,53 @@ test('preenche e registra relatório de acompanhamento individualizado', async (
   await expect(page.locator('.timeline')).toContainText('Banco de Dados I')
   await expect(page.locator('.timeline')).toContainText(
     'Excelente progresso no semestre.',
+  )
+})
+
+test('valida campos obrigatórios e registra o PEI do estudante', async ({
+  page,
+}) => {
+  await page.goto('/pei')
+  await expect(
+    page.getByRole('heading', {
+      name: 'Plano Educacional Individualizado (PEI)',
+      exact: true,
+    }),
+  ).toBeVisible()
+  await page.getByRole('button', { name: 'Registrar PEI' }).click()
+  await expect(page.getByRole('alert')).toContainText(
+    'Preencha todos os campos obrigatórios do PEI',
+  )
+  await page.getByLabel('Aluno *').selectOption('DEMO002')
+  await page.getByLabel('Período letivo *').fill('2026.2')
+  await page
+    .getByLabel('Histórico do aluno *')
+    .fill('Acompanhamento iniciado no ingresso.')
+  await page
+    .getByLabel('Necessidades educacionais específicas *')
+    .fill('Intérprete de Libras e material visual.')
+  await page
+    .getByLabel('Afinidade 1', { exact: true })
+    .fill('Cálculo aplicado e projetos estruturais')
+  await page
+    .getByLabel('Dificuldades identificadas *')
+    .fill('Aulas expositivas sem apoio visual.')
+  await page
+    .getByLabel('Propostas de adaptação *')
+    .fill('Roteiros visuais antecipados e avaliação adaptada.')
+  await page.getByRole('button', { name: 'Registrar PEI' }).click()
+  await expect(
+    page
+      .getByRole('status')
+      .filter({
+        hasText:
+          'Plano Educacional Individualizado (PEI) registrado com sucesso.',
+      }),
+  ).toBeVisible()
+  await expect(page.locator('.timeline')).toContainText(
+    'Intérprete de Libras e material visual.',
+  )
+  await expect(page.locator('.timeline')).toContainText(
+    'Cálculo aplicado e projetos estruturais',
   )
 })

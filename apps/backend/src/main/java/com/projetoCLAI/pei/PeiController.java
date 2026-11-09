@@ -8,6 +8,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 
 @RestController
@@ -28,10 +29,11 @@ public class PeiController {
         if (result.hasErrors()) {
             String msgErro = result.getFieldErrors().get(0).getDefaultMessage();
 
-            return ResponseEntity.badRequest().body(msgErro);
+            return ResponseEntity.badRequest().body(Map.of("Erro", msgErro));
         }
         Long idCriado = peiService.cadastrar(dto, matricula);
-        return ResponseEntity.status(HttpStatus.CREATED).body("Pei " +idCriado+ " criado com sucesso");
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(Map.of("id", idCriado, "mensagem", "Pei " + idCriado + " criado com sucesso"));
     }
 
     @GetMapping()

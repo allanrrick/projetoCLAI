@@ -57,6 +57,10 @@ public class Pei {
         return aluno;
     }
 
+    public String getAlunoMatricula() {
+        return aluno != null ? aluno.getMatricula() : null;
+    }
+
     public void setAluno(Aluno aluno) {
         this.aluno = aluno;
     }

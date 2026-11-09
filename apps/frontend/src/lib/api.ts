@@ -5,8 +5,10 @@ import type {
   HistoricoParams,
   NovoAluno,
   NovoAtendimento,
+  NovoPei,
   NovoRelatorio,
   NovoUsuario,
+  Pei,
   RelatorioAcompanhamento,
   Session,
 } from '../types'
@@ -282,5 +284,30 @@ export const api = {
           method: 'POST',
           body: JSON.stringify(input),
         })
+  },
+  async peis(matricula: string): Promise<Pei[]> {
+    if (demo) return (await demo).getPeis(matricula)
+    const result = await request<Pei[]>(
+      `/aluno/${encodeURIComponent(matricula)}/pei`,
+    )
+    if (!Array.isArray(result))
+      throw new ApiError('Não foi possível carregar os registros de PEI.')
+    return result.map((item) => ({
+      ...item,
+      alunoMatricula: item.alunoMatricula || matricula,
+    }))
+  },
+  async cadastrarPei(input: NovoPei): Promise<void> {
+    if (demo) {
+      ;(await demo).cadastrarPei(input)
+      return
+    }
+    await request<unknown>(
+      `/aluno/${encodeURIComponent(input.alunoMatricula)}/pei`,
+      {
+        method: 'POST',
+        body: JSON.stringify(input),
+      },
+    )
   },
 }
