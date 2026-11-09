@@ -239,7 +239,7 @@ test('valida campos obrigatórios e registra o PEI do estudante', async ({
   await expect(page.getByRole('alert')).toContainText(
     'Preencha todos os campos obrigatórios do PEI',
   )
-  await page.getByLabel('Aluno *').selectOption('DEMO002')
+  await page.getByLabel('Aluno *', { exact: true }).selectOption('DEMO002')
   await page.getByLabel('Período letivo *').fill('2026.2')
   await page
     .getByLabel('Histórico do aluno *')
@@ -271,4 +271,54 @@ test('valida campos obrigatórios e registra o PEI do estudante', async ({
   await expect(page.locator('.timeline')).toContainText(
     'Cálculo aplicado e projetos estruturais',
   )
+})
+
+test('valida campos obrigatórios do PEA e verifica vínculo ao aluno e à disciplina', async ({
+  page,
+}) => {
+  await page.goto('/pea')
+  await expect(
+    page.getByRole('heading', {
+      name: 'Plano de Ensino Adaptado (PEA)',
+      exact: true,
+    }),
+  ).toBeVisible()
+  await page.getByRole('button', { name: 'Registrar PEA' }).click()
+  await expect(page.getByRole('alert')).toContainText(
+    'Preencha todos os campos obrigatórios do PEA',
+  )
+  await page.getByLabel('Aluno *', { exact: true }).selectOption('DEMO001')
+  await page.getByLabel('Período letivo *').fill('2026.2')
+  await page.getByLabel('Disciplina *').fill('Engenharia de Software')
+  await page.getByLabel('Docente *').fill('Profa. Helena Souza')
+  await page
+    .getByLabel('Objetivos adaptados *')
+    .fill('Compreender requisitos e modelagem com apoio visual.')
+  await page
+    .getByLabel('Conteúdos programáticos *')
+    .fill('Engenharia de requisitos, casos de uso e testes.')
+  await page
+    .getByLabel('Estratégias de ensino *')
+    .fill('Mapas mentais e entregas iterativas orientadas.')
+  await page
+    .getByLabel('Avaliação adaptada *')
+    .fill('Projeto prático incremental com feedback semanal.')
+  await page.getByRole('button', { name: 'Registrar PEA' }).click()
+  await expect(
+    page
+      .getByRole('status')
+      .filter({
+        hasText: 'Plano de Ensino Adaptado (PEA) registrado com sucesso.',
+      }),
+  ).toBeVisible()
+  await expect(page.locator('.timeline > li')).toHaveCount(2)
+  await page
+    .getByRole('textbox', { name: 'Filtrar PEA por disciplina' })
+    .fill('Engenharia de Software')
+  await expect(page.locator('.timeline > li')).toHaveCount(1)
+  await expect(page.locator('.timeline')).toContainText(
+    'Engenharia de Software',
+  )
+  await page.getByLabel('Aluno *', { exact: true }).selectOption('DEMO002')
+  await expect(page.getByText('Nenhum PEA encontrado')).toBeVisible()
 })

@@ -4,9 +4,11 @@ import type {
   HistoricoParams,
   NovoAluno,
   NovoAtendimento,
+  NovoPea,
   NovoPei,
   NovoRelatorio,
   NovoUsuario,
+  Pea,
   Pei,
   Permission,
   RelatorioAcompanhamento,
@@ -269,5 +271,41 @@ export function cadastrarPei(input: NovoPei): Pei {
     dataCriacao: new Date().toLocaleDateString('en-CA'),
   }
   peis.unshift(novo)
+  return structuredClone(novo)
+}
+const peas: Pea[] = [
+  {
+    id: 1,
+    alunoMatricula: 'DEMO001',
+    disciplina: 'Algoritmos e Programação',
+    periodoLetivo: '2026.2',
+    docente: 'Prof. Marcos Vieira',
+    objetivos: 'Desenvolver lógica de programação com exercícios guiados.',
+    conteudos: 'Estruturas condicionais, laços de repetição e funções.',
+    estrategiasEnsino: 'Uso de fluxogramas visuais e monitoria individualizada.',
+    avaliacaoAdaptada:
+      'Provas práticas em laboratório com tempo estendido em 50%.',
+    dataCriacao: '2026-10-14',
+  },
+]
+export function getPeas(matricula: string, disciplina?: string): Pea[] {
+  const termo = normalize(disciplina?.trim() || '')
+  return structuredClone(
+    peas.filter(
+      (item) =>
+        item.alunoMatricula === matricula &&
+        (!termo || normalize(item.disciplina).includes(termo)),
+    ),
+  )
+}
+export function cadastrarPea(input: NovoPea): Pea {
+  const aluno = alunos.find((item) => item.matricula === input.alunoMatricula)
+  if (!aluno) throw new ApiError('Aluno não encontrado.', 404)
+  const novo: Pea = {
+    ...input,
+    id: peas.length + 1,
+    dataCriacao: new Date().toLocaleDateString('en-CA'),
+  }
+  peas.unshift(novo)
   return structuredClone(novo)
 }

@@ -14,6 +14,7 @@ import {
   BookOpenCheck,
   ClipboardPlus,
   FileCheck2,
+  FileSpreadsheet,
   GraduationCap,
   HeartHandshake,
   History,
@@ -32,6 +33,7 @@ import { Alunos } from './pages/Alunos'
 import { CadastroAluno } from './pages/CadastroAluno'
 import { AtendimentoForm } from './pages/AtendimentoForm'
 import { Historico } from './pages/Historico'
+import { PeaPage } from './pages/PeaPage'
 import { PeiPage } from './pages/PeiPage'
 import { Relatorios } from './pages/Relatorios'
 import './App.css'
@@ -155,6 +157,12 @@ function Layout() {
       icon: BookOpenCheck,
       permission: 'atendimentos:cadastrar',
     },
+    {
+      to: '/pea',
+      label: 'PEA',
+      icon: FileSpreadsheet,
+      permission: 'atendimentos:cadastrar',
+    },
   ] as const
   const section = location.pathname.startsWith('/historico')
     ? 'Histórico'
@@ -162,11 +170,13 @@ function Layout() {
       ? 'Relatórios'
       : location.pathname.startsWith('/pei')
         ? 'PEI'
-        : location.pathname.startsWith('/atendimentos')
-          ? 'Atendimentos'
-          : location.pathname.startsWith('/acesso')
-            ? 'Minha conta'
-            : 'Alunos'
+        : location.pathname.startsWith('/pea')
+          ? 'PEA'
+          : location.pathname.startsWith('/atendimentos')
+            ? 'Atendimentos'
+            : location.pathname.startsWith('/acesso')
+              ? 'Minha conta'
+              : 'Alunos'
   useEffect(() => {
     document.title = `${section} · CLAI`
     document.getElementById('main-content')?.focus()
@@ -341,6 +351,16 @@ function Layout() {
                 <Guard permission="atendimentos:cadastrar">
                   <Guard permission="alunos:consultar">
                     <PeiPage />
+                  </Guard>
+                </Guard>
+              }
+            />
+            <Route
+              path="/pea"
+              element={
+                <Guard permission="atendimentos:cadastrar">
+                  <Guard permission="alunos:consultar">
+                    <PeaPage />
                   </Guard>
                 </Guard>
               }

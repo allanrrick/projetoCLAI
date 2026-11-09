@@ -5,9 +5,11 @@ import type {
   HistoricoParams,
   NovoAluno,
   NovoAtendimento,
+  NovoPea,
   NovoPei,
   NovoRelatorio,
   NovoUsuario,
+  Pea,
   Pei,
   RelatorioAcompanhamento,
   Session,
@@ -304,6 +306,31 @@ export const api = {
     }
     await request<unknown>(
       `/aluno/${encodeURIComponent(input.alunoMatricula)}/pei`,
+      {
+        method: 'POST',
+        body: JSON.stringify(input),
+      },
+    )
+  },
+  async peas(matricula: string, disciplina?: string): Promise<Pea[]> {
+    if (demo) return (await demo).getPeas(matricula, disciplina)
+    const query = new URLSearchParams()
+    if (disciplina?.trim()) query.set('disciplina', disciplina.trim())
+    const search = query.toString()
+    const result = await request<Pea[]>(
+      `/aluno/${encodeURIComponent(matricula)}/pea${search ? `?${search}` : ''}`,
+    )
+    if (!Array.isArray(result))
+      throw new ApiError('Não foi possível carregar os registros de PEA.')
+    return result.map((item) => ({
+      ...item,
+      alunoMatricula: item.alunoMatricula || matricula,
+    }))
+  },
+  async cadastrarPea(input: NovoPea): Promise<Pea> {
+    if (demo) return (await demo).cadastrarPea(input)
+    return request<Pea>(
+      `/aluno/${encodeURIComponent(input.alunoMatricula)}/pea`,
       {
         method: 'POST',
         body: JSON.stringify(input),
