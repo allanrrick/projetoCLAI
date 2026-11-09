@@ -332,7 +332,7 @@ test('acessa planos de ação pela lista de alunos, valida condicionais e separa
     .click()
   await expect(page).toHaveURL(/planos-acao\?aluno=2/)
   await expect(
-    page.getByRole('heading', { name: 'Bruno Santos (exemplo)' }),
+    page.getByRole('heading', { name: 'Bruno Santos (exemplo)', exact: true }),
   ).toBeVisible()
   await expect(
     page.getByText('Ainda não há planos de ação para este aluno'),
