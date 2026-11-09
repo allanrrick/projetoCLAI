@@ -322,3 +322,60 @@ test('valida campos obrigatórios do PEA e verifica vínculo ao aluno e à disci
   await page.getByLabel('Aluno *', { exact: true }).selectOption('DEMO002')
   await expect(page.getByText('Nenhum PEA encontrado')).toBeVisible()
 })
+
+test('acessa planos de ação pela lista de alunos, valida condicionais e separa por aluno', async ({
+  page,
+}) => {
+  await page.goto('/alunos')
+  await page
+    .getByRole('link', { name: 'Planos de ação de Bruno Santos (exemplo)' })
+    .click()
+  await expect(page).toHaveURL(/planos-acao\?aluno=2/)
+  await expect(
+    page.getByRole('heading', { name: 'Bruno Santos (exemplo)' }),
+  ).toBeVisible()
+  await expect(
+    page.getByText('Ainda não há planos de ação para este aluno'),
+  ).toBeVisible()
+
+  await page.getByRole('button', { name: 'Registrar plano de ação' }).click()
+  await expect(page.getByRole('alert')).toContainText('seções obrigatórias')
+
+  await page.getByLabel('O aluno possui comorbidades?').check()
+  await page
+    .getByLabel('Necessidades específicas *')
+    .fill('Apoio pedagógico e material adaptado.')
+  await page
+    .getByLabel(
+      'Avanços, dificuldades e potencialidades no percurso educacional *',
+    )
+    .fill('Bom desempenho em disciplinas de cálculo.')
+  await page
+    .getByLabel('Principais demandas *')
+    .fill('Adaptação de avaliações escritas.')
+  await page
+    .getByLabel('Propostas iniciais de intervenção *')
+    .fill('Acompanhamento quinzenal na CLAI.')
+  await page.getByRole('button', { name: 'Registrar plano de ação' }).click()
+  await expect(page.getByRole('alert')).toContainText(
+    'Descreva as comorbidades',
+  )
+
+  await page
+    .getByLabel('Descrição das comorbidades *')
+    .fill('Dislexia com recomendação de tempo adicional.')
+  await page.getByRole('button', { name: 'Registrar plano de ação' }).click()
+  await expect(
+    page
+      .getByRole('status')
+      .filter({ hasText: 'Plano de ação registrado com sucesso.' }),
+  ).toBeVisible()
+  await expect(page.locator('.timeline')).toContainText(
+    'Dislexia com recomendação de tempo adicional.',
+  )
+
+  await page.getByLabel('Selecione um aluno').selectOption('3')
+  await expect(
+    page.getByText('Ainda não há planos de ação para este aluno'),
+  ).toBeVisible()
+})

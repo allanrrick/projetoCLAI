@@ -12,6 +12,7 @@ import {
 import {
   ArrowRight,
   BookOpenCheck,
+  ClipboardCheck,
   ClipboardPlus,
   FileCheck2,
   FileSpreadsheet,
@@ -35,6 +36,7 @@ import { AtendimentoForm } from './pages/AtendimentoForm'
 import { Historico } from './pages/Historico'
 import { PeaPage } from './pages/PeaPage'
 import { PeiPage } from './pages/PeiPage'
+import { PlanosAcaoPage } from './pages/PlanosAcaoPage'
 import { Relatorios } from './pages/Relatorios'
 import './App.css'
 
@@ -80,6 +82,8 @@ function Acesso() {
     'alunos:cadastrar': 'Cadastrar alunos',
     'atendimentos:consultar': 'Consultar o histórico de atendimentos',
     'atendimentos:cadastrar': 'Registrar atendimentos',
+    'planos:consultar': 'Consultar planos de ação da CLAI',
+    'planos:cadastrar': 'Registrar planos de ação da CLAI',
   }
   return (
     <>
@@ -163,20 +167,28 @@ function Layout() {
       icon: FileSpreadsheet,
       permission: 'atendimentos:cadastrar',
     },
+    {
+      to: '/planos-acao',
+      label: 'Planos de ação',
+      icon: ClipboardCheck,
+      permission: 'planos:consultar',
+    },
   ] as const
   const section = location.pathname.startsWith('/historico')
     ? 'Histórico'
-    : location.pathname.startsWith('/relatorios')
-      ? 'Relatórios'
-      : location.pathname.startsWith('/pei')
-        ? 'PEI'
-        : location.pathname.startsWith('/pea')
-          ? 'PEA'
-          : location.pathname.startsWith('/atendimentos')
-            ? 'Atendimentos'
-            : location.pathname.startsWith('/acesso')
-              ? 'Minha conta'
-              : 'Alunos'
+    : location.pathname.startsWith('/planos-acao')
+      ? 'Planos de ação'
+      : location.pathname.startsWith('/relatorios')
+        ? 'Relatórios'
+        : location.pathname.startsWith('/pei')
+          ? 'PEI'
+          : location.pathname.startsWith('/pea')
+            ? 'PEA'
+            : location.pathname.startsWith('/atendimentos')
+              ? 'Atendimentos'
+              : location.pathname.startsWith('/acesso')
+                ? 'Minha conta'
+                : 'Alunos'
   useEffect(() => {
     document.title = `${section} · CLAI`
     document.getElementById('main-content')?.focus()
@@ -361,6 +373,16 @@ function Layout() {
                 <Guard permission="atendimentos:cadastrar">
                   <Guard permission="alunos:consultar">
                     <PeaPage />
+                  </Guard>
+                </Guard>
+              }
+            />
+            <Route
+              path="/planos-acao"
+              element={
+                <Guard permission="planos:consultar">
+                  <Guard permission="alunos:consultar">
+                    <PlanosAcaoPage />
                   </Guard>
                 </Guard>
               }

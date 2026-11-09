@@ -6,11 +6,13 @@ import type {
   NovoAtendimento,
   NovoPea,
   NovoPei,
+  NovoPlanoAcao,
   NovoRelatorio,
   NovoUsuario,
   Pea,
   Pei,
   Permission,
+  PlanoAcao,
   RelatorioAcompanhamento,
   Session,
 } from '../types'
@@ -22,6 +24,8 @@ const fullPermissions: Permission[] = [
   'alunos:cadastrar',
   'atendimentos:consultar',
   'atendimentos:cadastrar',
+  'planos:consultar',
+  'planos:cadastrar',
 ]
 
 export const session: Session = {
@@ -307,5 +311,59 @@ export function cadastrarPea(input: NovoPea): Pea {
     dataCriacao: new Date().toLocaleDateString('en-CA'),
   }
   peas.unshift(novo)
+  return structuredClone(novo)
+}
+const planosAcao: PlanoAcao[] = [
+  {
+    idPlano: 1,
+    idAluno: 1,
+    alunoNome: 'Ana Oliveira (exemplo)',
+    alunoMatricula: 'DEMO001',
+    alunoCurso: 'Análise e Desenvolvimento de Sistemas',
+    alunoEmail: 'ana@example.com',
+    responsavelNome: 'Helena Oliveira',
+    responsavelParentesco: 'Mãe',
+    responsavelContato: '(83) 99999-1001',
+    possuiComorbidades: false,
+    comorbidades: null,
+    usoMedicacaoContinua: false,
+    medicacaoContinua: null,
+    servicosApoio: 'Acompanhamento pedagógico e orientação de estudos',
+    documentosComprobatorios: 'Relatório multiprofissional inicial',
+    necessidadesEspecificas:
+      'Materiais didáticos com estrutura visual clara e antecedência nas entregas.',
+    percursoEducacional:
+      'Boa adaptação às disciplinas técnicas e participação ativa em projetos.',
+    principaisDemandas:
+      'Organização de cronograma de avaliações e apoio em atividades extensas.',
+    propostasIntervencao:
+      'Encontros quinzenais com a equipe da CLAI e articulação com os docentes.',
+    assinaturaCoordenador: 'Coordenação Local CLAI - Campus Cajazeiras',
+    dataDocumento: '2026-10-14',
+    autor: 'Profissional CLAI',
+    criadoEm: '2026-10-14T10:00:00',
+  },
+]
+export function getPlanosAcao(idAluno: number): PlanoAcao[] {
+  const aluno = alunos.find((item) => item.idAluno === idAluno)
+  if (!aluno) throw new ApiError('Aluno não encontrado.', 404)
+  return structuredClone(
+    planosAcao.filter((item) => item.idAluno === idAluno),
+  )
+}
+export function cadastrarPlanoAcao(input: NovoPlanoAcao): PlanoAcao {
+  const aluno = alunos.find((item) => item.idAluno === input.idAluno)
+  if (!aluno) throw new ApiError('Aluno não encontrado.', 404)
+  const novo: PlanoAcao = {
+    ...input,
+    idPlano: planosAcao.length + 1,
+    alunoNome: aluno.nome,
+    alunoMatricula: aluno.matricula,
+    alunoCurso: aluno.curso,
+    alunoEmail: aluno.email,
+    autor: session.nome,
+    criadoEm: new Date().toISOString(),
+  }
+  planosAcao.unshift(novo)
   return structuredClone(novo)
 }

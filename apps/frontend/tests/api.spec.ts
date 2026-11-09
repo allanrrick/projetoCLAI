@@ -50,6 +50,8 @@ async function session(
     'alunos:cadastrar',
     'atendimentos:consultar',
     'atendimentos:cadastrar',
+    'planos:consultar',
+    'planos:cadastrar',
   ],
 ) {
   await page.route('**/api/auth/sessao', (route) =>
@@ -127,6 +129,10 @@ test('esconde ações sem permissão e bloqueia a navegação direta sem consult
   ).toBeVisible()
   expect(requested).toBeFalsy()
   await page.goto('/alunos/novo')
+  await expect(
+    page.getByRole('heading', { name: 'Acesso restrito' }),
+  ).toBeVisible()
+  await page.goto('/planos-acao?aluno=1')
   await expect(
     page.getByRole('heading', { name: 'Acesso restrito' }),
   ).toBeVisible()

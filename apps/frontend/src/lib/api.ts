@@ -7,10 +7,12 @@ import type {
   NovoAtendimento,
   NovoPea,
   NovoPei,
+  NovoPlanoAcao,
   NovoRelatorio,
   NovoUsuario,
   Pea,
   Pei,
+  PlanoAcao,
   RelatorioAcompanhamento,
   Session,
 } from '../types'
@@ -336,5 +338,25 @@ export const api = {
         body: JSON.stringify(input),
       },
     )
+  },
+  async planosAcao(
+    idAluno: number,
+    signal?: AbortSignal,
+  ): Promise<PlanoAcao[]> {
+    if (demo) return (await demo).getPlanosAcao(idAluno)
+    const result = await request<PlanoAcao[]>(
+      `/planos-acao/aluno/${encodeURIComponent(String(idAluno))}`,
+      { signal },
+    )
+    if (!Array.isArray(result))
+      throw new ApiError('Não foi possível carregar os planos de ação.')
+    return result
+  },
+  async cadastrarPlanoAcao(input: NovoPlanoAcao): Promise<PlanoAcao> {
+    if (demo) return (await demo).cadastrarPlanoAcao(input)
+    return request<PlanoAcao>('/planos-acao', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    })
   },
 }
