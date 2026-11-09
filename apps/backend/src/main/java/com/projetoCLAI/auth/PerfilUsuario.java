@@ -7,7 +7,9 @@ public enum PerfilUsuario {
             "alunos:consultar",
             "alunos:cadastrar",
             "atendimentos:consultar",
-            "atendimentos:cadastrar"
+            "atendimentos:cadastrar",
+            "planos:consultar",
+            "planos:cadastrar"
     )),
     ASSISTENTE(List.of(
             "alunos:consultar"

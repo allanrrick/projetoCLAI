@@ -3,6 +3,8 @@ export type Permission =
   | 'alunos:cadastrar'
   | 'atendimentos:consultar'
   | 'atendimentos:cadastrar'
+  | 'planos:consultar'
+  | 'planos:cadastrar'
 export type PerfilAcesso = 'PROFISSIONAL_CLAI' | 'ASSISTENTE'
 export type Session = {
   nome: string
@@ -123,3 +125,38 @@ export type Pea = {
   dataCriacao: string
 }
 export type NovoPea = Omit<Pea, 'id' | 'dataCriacao'>
+export type PlanoAcao = {
+  idPlano: number
+  idAluno: number
+  alunoNome?: string
+  alunoMatricula?: string
+  alunoCurso?: string
+  alunoEmail?: string | null
+  responsavelNome?: string | null
+  responsavelParentesco?: string | null
+  responsavelContato?: string | null
+  possuiComorbidades: boolean
+  comorbidades?: string | null
+  usoMedicacaoContinua: boolean
+  medicacaoContinua?: string | null
+  servicosApoio?: string | null
+  documentosComprobatorios?: string | null
+  necessidadesEspecificas: string
+  percursoEducacional: string
+  principaisDemandas: string
+  propostasIntervencao: string
+  assinaturaCoordenador: string
+  dataDocumento: string
+  autor: string
+  criadoEm?: string
+}
+export type NovoPlanoAcao = Omit<
+  PlanoAcao,
+  | 'idPlano'
+  | 'alunoNome'
+  | 'alunoMatricula'
+  | 'alunoCurso'
+  | 'alunoEmail'
+  | 'autor'
+  | 'criadoEm'
+>
