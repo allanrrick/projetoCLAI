@@ -5,7 +5,9 @@ import type {
   HistoricoParams,
   NovoAluno,
   NovoAtendimento,
+  NovoRelatorio,
   NovoUsuario,
+  RelatorioAcompanhamento,
   Session,
 } from '../types'
 
@@ -262,5 +264,23 @@ export const api = {
       body,
     })
     return mapAtendimento(result || {}, idAluno)
+  },
+  async relatorios(): Promise<RelatorioAcompanhamento[]> {
+    const result = demo
+      ? (await demo).getRelatorios()
+      : await request<RelatorioAcompanhamento[]>('/relatorios')
+    if (!Array.isArray(result))
+      throw new ApiError('Não foi possível carregar os relatórios.')
+    return result
+  },
+  async cadastrarRelatorio(
+    input: NovoRelatorio,
+  ): Promise<RelatorioAcompanhamento> {
+    return demo
+      ? (await demo).cadastrarRelatorio(input)
+      : request<RelatorioAcompanhamento>('/relatorios', {
+          method: 'POST',
+          body: JSON.stringify(input),
+        })
   },
 }
