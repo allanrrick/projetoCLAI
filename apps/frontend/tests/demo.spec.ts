@@ -192,7 +192,10 @@ test('preenche e registra relatório de acompanhamento individualizado', async (
 }) => {
   await page.goto('/relatorios')
   await expect(
-    page.getByRole('heading', { name: 'Relatório de acompanhamento' }),
+    page.getByRole('heading', {
+      name: 'Relatório de acompanhamento',
+      exact: true,
+    }),
   ).toBeVisible()
   await page.getByRole('button', { name: 'Salvar relatório' }).click()
   await expect(page.getByRole('alert')).toContainText(
