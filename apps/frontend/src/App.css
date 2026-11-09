@@ -494,6 +494,11 @@ tbody tr:hover {
   color: #7e827a;
   background: #f0f1ee;
 }
+.row-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
 .row-action {
   color: #869586;
   display: inline-flex;

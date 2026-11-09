@@ -61,6 +61,9 @@ public class AutorizacaoInterceptor implements HandlerInterceptor {
         if (uri.startsWith("/atendimentos")) {
             return leitura ? "atendimentos:consultar" : "atendimentos:cadastrar";
         }
+        if (uri.startsWith("/planos-acao")) {
+            return leitura ? "planos:consultar" : "planos:cadastrar";
+        }
         return null;
     }
 

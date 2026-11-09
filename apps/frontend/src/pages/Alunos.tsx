@@ -3,6 +3,7 @@ import {
   ArrowRight,
   ChevronLeft,
   ChevronRight,
+  ClipboardCheck,
   GraduationCap,
   Plus,
   Search,
@@ -206,7 +207,8 @@ export function Alunos() {
                       <th scope="col">Curso</th>
                       <th scope="col">Situação</th>
                       <th scope="col">Cadastro</th>
-                      {can('atendimentos:consultar') && (
+                      {(can('atendimentos:consultar') ||
+                        can('planos:consultar')) && (
                         <th scope="col">
                           <span className="sr-only">Ações</span>
                         </th>
@@ -246,15 +248,29 @@ export function Alunos() {
                         <td className="date-cell">
                           {formatDate(aluno.dataCadastro)}
                         </td>
-                        {can('atendimentos:consultar') && (
+                        {(can('atendimentos:consultar') ||
+                          can('planos:consultar')) && (
                           <td>
-                            <Link
-                              to={`/historico?aluno=${aluno.idAluno}`}
-                              className="row-action"
-                              aria-label={`Ver histórico de ${aluno.nome}`}
-                            >
-                              <ArrowRight size={18} />
-                            </Link>
+                            <div className="row-actions">
+                              {can('planos:consultar') && (
+                                <Link
+                                  to={`/planos-acao?aluno=${aluno.idAluno}`}
+                                  className="row-action"
+                                  aria-label={`Planos de ação de ${aluno.nome}`}
+                                >
+                                  <ClipboardCheck size={17} />
+                                </Link>
+                              )}
+                              {can('atendimentos:consultar') && (
+                                <Link
+                                  to={`/historico?aluno=${aluno.idAluno}`}
+                                  className="row-action"
+                                  aria-label={`Ver histórico de ${aluno.nome}`}
+                                >
+                                  <ArrowRight size={18} />
+                                </Link>
+                              )}
+                            </div>
                           </td>
                         )}
                       </tr>
