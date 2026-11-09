@@ -110,3 +110,16 @@ export type NovoPei = {
   dificuldades: string
   propostas: string
 }
+export type Pea = {
+  id: number
+  alunoMatricula: string
+  disciplina: string
+  periodoLetivo: string
+  docente: string
+  objetivos: string
+  conteudos: string
+  estrategiasEnsino: string
+  avaliacaoAdaptada: string
+  dataCriacao: string
+}
+export type NovoPea = Omit<Pea, 'id' | 'dataCriacao'>
