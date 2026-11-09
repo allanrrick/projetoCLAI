@@ -161,6 +161,10 @@ test('navegação e formulário funcionam em celular sem transbordar a página',
   await expect(
     page.getByRole('heading', { name: 'Alunos', exact: true }),
   ).toBeVisible()
+  await expect(
+    page.getByText('Um espaço de acolhimento e confiança'),
+  ).toHaveCount(0)
+  await expect(page.getByText('Cada trajetória importa.')).toHaveCount(0)
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= window.innerWidth,
@@ -171,6 +175,7 @@ test('navegação e formulário funcionam em celular sem transbordar a página',
     .getByRole('link', { name: 'Novo atendimento', exact: true })
     .click()
   await expect(page.getByLabel('Observações *')).toBeVisible()
+  await expect(page.getByText('CONTINUIDADE NO CUIDADO')).toHaveCount(0)
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= window.innerWidth,
