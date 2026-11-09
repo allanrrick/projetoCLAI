@@ -97,6 +97,10 @@ public class RelatorioAcompanhamento {
         return aluno;
     }
 
+    public Long getAlunoId() {
+        return aluno != null ? aluno.getIdAluno() : null;
+    }
+
     public void setAluno(Aluno aluno) {
         this.aluno = aluno;
     }

@@ -186,3 +186,36 @@ test('navegação e formulário funcionam em celular sem transbordar a página',
     fullPage: true,
   })
 })
+
+test('preenche e registra relatório de acompanhamento individualizado', async ({
+  page,
+}) => {
+  await page.goto('/relatorios')
+  await expect(
+    page.getByRole('heading', { name: 'Relatório de acompanhamento' }),
+  ).toBeVisible()
+  await page.getByRole('button', { name: 'Salvar relatório' }).click()
+  await expect(page.getByRole('alert')).toContainText(
+    'Preencha aluno, período letivo',
+  )
+  await page.getByLabel('Aluno *').selectOption('1')
+  await page.getByLabel('Período letivo *').fill('2026.2')
+  await page.getByLabel('Componente curricular *').fill('Banco de Dados I')
+  await page.getByLabel('Docente *').fill('Prof. Ricardo Alves')
+  await page.getByLabel('Interage bem com colegas e docentes').check()
+  await page.getByLabel('Habilidade 1').fill('Modelagem relacional')
+  await page.getByLabel('Nível de aprendizado 1').selectOption('OTIMO')
+  await page
+    .getByLabel('Parecer conclusivo *')
+    .fill('Excelente progresso no semestre.')
+  await page.getByRole('button', { name: 'Salvar relatório' }).click()
+  await expect(
+    page
+      .getByRole('status')
+      .filter({ hasText: 'Relatório de acompanhamento registrado com sucesso.' }),
+  ).toBeVisible()
+  await expect(page.locator('.timeline')).toContainText('Banco de Dados I')
+  await expect(page.locator('.timeline')).toContainText(
+    'Excelente progresso no semestre.',
+  )
+})

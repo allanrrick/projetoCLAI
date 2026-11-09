@@ -4,8 +4,10 @@ import type {
   HistoricoParams,
   NovoAluno,
   NovoAtendimento,
+  NovoRelatorio,
   NovoUsuario,
   Permission,
+  RelatorioAcompanhamento,
   Session,
 } from '../types'
 import { ApiError } from './api'
@@ -170,4 +172,56 @@ export function cadastrarAtendimento(input: NovoAtendimento): Atendimento {
   }
   atendimentos.push(atendimento)
   return structuredClone(atendimento)
+}
+const relatorios: RelatorioAcompanhamento[] = [
+  {
+    id: 1,
+    alunoId: 1,
+    periodoLetivo: '2026.2',
+    componenteCurricular: 'Estrutura de Dados',
+    docente: 'Prof. Carlos Mendes',
+    comentarioRelacionamento: 'Participa ativamente das aulas práticas.',
+    comentarioCognitivo: 'Boa assimilação com apoio de material visual.',
+    comentarioSocioemocional: 'Demonstra engajamento e autonomia.',
+    avancosGerais: 'Evolução consistente na resolução de exercícios.',
+    relatoDificuldades: 'Necessita de tempo adicional em avaliações escritas.',
+    fatoresExternos: '',
+    aspectos: [
+      {
+        id: 1,
+        grupo: 'RELACIONAMENTO',
+        opcao: 'Interage bem com colegas e docentes',
+      },
+      {
+        id: 2,
+        grupo: 'COGNITIVO',
+        opcao: 'Compreende os conceitos trabalhados',
+      },
+    ],
+    habilidades: [
+      {
+        id: 1,
+        ordem: 1,
+        habilidadeDesenvolvida: 'Implementação de listas encadeadas',
+        nivelAprendizado: 'OTIMO',
+        observacoes: 'Concluiu todas as atividades práticas.',
+      },
+    ],
+    parecer:
+      'Recomenda-se manter o acompanhamento semestral e o tempo adicional em provas.',
+    dataRelatorio: '2026-10-15',
+  },
+]
+export const getRelatorios = () => structuredClone(relatorios)
+export function cadastrarRelatorio(
+  input: NovoRelatorio,
+): RelatorioAcompanhamento {
+  if (!alunos.some((aluno) => aluno.idAluno === input.alunoId))
+    throw new ApiError('Aluno não encontrado.', 404)
+  const relatorio: RelatorioAcompanhamento = {
+    ...input,
+    id: relatorios.length + 1,
+  }
+  relatorios.unshift(relatorio)
+  return structuredClone(relatorio)
 }

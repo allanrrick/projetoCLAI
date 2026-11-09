@@ -12,6 +12,7 @@ import {
 import {
   ArrowRight,
   ClipboardPlus,
+  FileCheck2,
   GraduationCap,
   HeartHandshake,
   History,
@@ -30,6 +31,7 @@ import { Alunos } from './pages/Alunos'
 import { CadastroAluno } from './pages/CadastroAluno'
 import { AtendimentoForm } from './pages/AtendimentoForm'
 import { Historico } from './pages/Historico'
+import { Relatorios } from './pages/Relatorios'
 import './App.css'
 
 function Logo() {
@@ -139,14 +141,22 @@ function Layout() {
       icon: History,
       permission: 'atendimentos:consultar',
     },
+    {
+      to: '/relatorios',
+      label: 'Relatórios',
+      icon: FileCheck2,
+      permission: 'atendimentos:cadastrar',
+    },
   ] as const
   const section = location.pathname.startsWith('/historico')
     ? 'Histórico'
-    : location.pathname.startsWith('/atendimentos')
-      ? 'Atendimentos'
-      : location.pathname.startsWith('/acesso')
-        ? 'Minha conta'
-        : 'Alunos'
+    : location.pathname.startsWith('/relatorios')
+      ? 'Relatórios'
+      : location.pathname.startsWith('/atendimentos')
+        ? 'Atendimentos'
+        : location.pathname.startsWith('/acesso')
+          ? 'Minha conta'
+          : 'Alunos'
   useEffect(() => {
     document.title = `${section} · CLAI`
     document.getElementById('main-content')?.focus()
@@ -301,6 +311,16 @@ function Layout() {
                 <Guard permission="atendimentos:consultar">
                   <Guard permission="alunos:consultar">
                     <Historico />
+                  </Guard>
+                </Guard>
+              }
+            />
+            <Route
+              path="/relatorios"
+              element={
+                <Guard permission="atendimentos:cadastrar">
+                  <Guard permission="alunos:consultar">
+                    <Relatorios />
                   </Guard>
                 </Guard>
               }
