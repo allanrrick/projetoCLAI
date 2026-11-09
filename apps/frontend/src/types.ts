@@ -86,3 +86,27 @@ export type RelatorioAcompanhamento = {
   dataRelatorio: string
 }
 export type NovoRelatorio = Omit<RelatorioAcompanhamento, 'id'>
+export type PeiAfinidade = {
+  id?: number
+  afinidade: string
+}
+export type Pei = {
+  id: number
+  alunoMatricula: string
+  periodoLetivo: string
+  historico: string
+  necessidadesEspecificas: string
+  afinidades: PeiAfinidade[]
+  dificuldades: string
+  propostasAdaptacao: string
+  dataCriacao: string
+}
+export type NovoPei = {
+  alunoMatricula: string
+  periodoLetivo: string
+  historico: string
+  necessidades: string
+  afinidades: { afinidade: string }[]
+  dificuldades: string
+  propostas: string
+}
