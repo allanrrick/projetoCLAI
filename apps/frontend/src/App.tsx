@@ -11,7 +11,6 @@ import {
 } from 'react-router-dom'
 import {
   ArrowRight,
-  BookOpen,
   ClipboardPlus,
   GraduationCap,
   HeartHandshake,
@@ -218,13 +217,6 @@ function Layout() {
             ))}
         </nav>
         <div className="sidebar-bottom">
-          <div className="care-note">
-            <BookOpen size={20} />
-            <p>
-              Cada trajetória importa.
-              <span>Um espaço para acolher, acompanhar e incluir.</span>
-            </p>
-          </div>
           <NavLink className="account-link" to="/acesso">
             <ShieldCheck size={19} />
             Meu acesso

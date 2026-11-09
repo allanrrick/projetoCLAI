@@ -290,16 +290,6 @@ export function Alunos() {
               </div>
             </div>
           </section>
-          <div className="info-strip">
-            <span>
-              <UserCheck size={18} />
-              Um espaço de acolhimento e confiança
-            </span>
-            <p>
-              As informações dos alunos devem ser tratadas com cuidado e
-              confidencialidade.
-            </p>
-          </div>
         </>
       )}
     </>

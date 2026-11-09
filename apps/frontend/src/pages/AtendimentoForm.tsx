@@ -229,25 +229,6 @@ export function AtendimentoForm() {
               />
             </form>
           </section>
-          <aside className="form-aside">
-            <span className="eyebrow">CONTINUIDADE NO CUIDADO</span>
-            <h2>
-              Cada registro
-              <br />
-              faz a diferença.
-            </h2>
-            <p>
-              Um histórico bem documentado permite que o acompanhamento continue
-              com contexto, atenção e acolhimento.
-            </p>
-            <div className="aside-note">
-              <strong>Revise antes de registrar</strong>
-              <p>
-                Confira o aluno selecionado, a data e os documentos anexados
-                antes de salvar o atendimento.
-              </p>
-            </div>
-          </aside>
         </div>
       )}
     </>

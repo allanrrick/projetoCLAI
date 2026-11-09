@@ -130,25 +130,6 @@ export function CadastroAluno() {
             />
           </form>
         </section>
-        <aside className="form-aside">
-          <span className="eyebrow">UM CADASTRO, UMA TRAJETÓRIA</span>
-          <h2>
-            Conhecer para
-            <br />
-            acompanhar melhor.
-          </h2>
-          <p>
-            Confira os dados antes de salvar. Eles ajudam a identificar o aluno
-            e a manter seu acompanhamento organizado.
-          </p>
-          <div className="aside-note">
-            <strong>Evite cadastros duplicados</strong>
-            <p>
-              Cada aluno deve ter um único perfil. Se já houver cadastro,
-              consulte a lista de alunos.
-            </p>
-          </div>
-        </aside>
       </div>
     </>
   )
