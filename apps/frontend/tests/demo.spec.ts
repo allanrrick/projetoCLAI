@@ -30,7 +30,9 @@ test('cadastra aluno, mostra sucesso e detecta matrícula duplicada', async ({
   await page.goto('/alunos/novo')
   await page.getByLabel('Nome completo *').fill('Estudante de teste')
   await page.getByLabel('Matrícula *').fill('TESTE001')
-  await page.getByLabel('Curso *').fill('Curso de teste')
+  await page
+    .getByLabel('Curso *')
+    .selectOption('Análise e Desenvolvimento de Sistemas')
   await page.getByRole('button', { name: 'Cadastrar aluno' }).click()
   await expect(
     page
@@ -41,23 +43,30 @@ test('cadastra aluno, mostra sucesso e detecta matrícula duplicada', async ({
   await page.getByRole('link', { name: 'Cadastrar aluno' }).click()
   await page.getByLabel('Nome completo *').fill('Outro estudante')
   await page.getByLabel('Matrícula *').fill('TESTE001')
-  await page.getByLabel('Curso *').fill('Outro curso')
+  await page.getByLabel('Curso *').selectOption('Engenharia Civil')
   await page.getByRole('button', { name: 'Cadastrar aluno' }).click()
   await expect(page.getByRole('alert')).toContainText('Já existe um aluno')
   await expect(page.getByLabel('Nome completo *')).toHaveValue(
     'Outro estudante',
   )
+  await expect(page.getByLabel('Curso *')).toHaveValue('Engenharia Civil')
 })
 
-test('rejeita campos obrigatórios vazios ou compostos apenas por espaços', async ({
+test('rejeita campos obrigatórios vazios, sem curso selecionado ou compostos apenas por espaços', async ({
   page,
 }) => {
   await page.goto('/alunos/novo')
   await page.getByRole('button', { name: 'Cadastrar aluno' }).click()
   await expect(page).toHaveURL(/alunos\/novo/)
+  await page.getByLabel('Nome completo *').fill('Estudante sem curso')
+  await page.getByLabel('Matrícula *').fill('A1')
+  await page.getByRole('button', { name: 'Cadastrar aluno' }).click()
+  await expect(page).toHaveURL(/alunos\/novo/)
   await page.getByLabel('Nome completo *').fill('   ')
   await page.getByLabel('Matrícula *').fill('A1')
-  await page.getByLabel('Curso *').fill('Curso')
+  await page
+    .getByLabel('Curso *')
+    .selectOption('Análise e Desenvolvimento de Sistemas')
   await page.getByRole('button', { name: 'Cadastrar aluno' }).click()
   await expect(page.getByRole('alert')).toContainText('apenas espaços')
 })
