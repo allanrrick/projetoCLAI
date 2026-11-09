@@ -90,7 +90,6 @@ export function Relatorios() {
 
   useEffect(() => {
     let active = true
-    setLoadingRelatorios(true)
     api
       .relatorios()
       .then((items) => {
