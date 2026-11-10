@@ -32,40 +32,18 @@ O sistema apoia os profissionais da CLAI no acompanhamento pedagógico e institu
 
 ## Guia de Instalação e Execução
 
-### Pré-requisitos
-- **Java JDK 21+**
-- **Node.js 20.19+ ou 22.12+** e **npm**
-- **Git**
-- Instância **PostgreSQL** acessível (configurada em `apps/backend/src/main/resources/application.properties`)
+Antes de iniciar, certifique-se de que você possui o Docker instalado e em execução na sua máquina.
 
-### Passo a passo
+Em seguida, abra o projeto na IDE de sua preferência, navegue para apps -> backend e configure as variáveis de ambiente no .env.
 
-1. **Clonar o repositório e acessar a pasta do projeto:**
-   ```bash
-   git clone https://github.com/allanrrick/projetoCLAI.git
-   cd projetoCLAI
-   ```
+Então, abra um novo terminal e execute os seguintes comandos
 
-2. **Executar o Backend (API Spring Boot na porta `8080`):**
-   ```bash
-   cd apps/backend
-   ./mvnw spring-boot:run
-   ```
-   *(No Windows PowerShell/CMD, utilize `.\mvnw.cmd spring-boot:run`)*
+```bash
+cd apps/backend
+docker compose up -d
+```
 
-3. **Executar o Frontend (React + Vite na porta `5173`) em outro terminal:**
-   ```bash
-   cd apps/frontend
-   cp .env.example .env
-   npm ci
-   npm run dev
-   ```
-
-4. **Acessar a aplicação no navegador:**
-   - Abra `http://127.0.0.1:5173`.
-   - Você pode criar uma nova conta clicando em **"Criar conta"** na tela inicial ou entrar com a conta padrão inicializada automaticamente:
-     - **Profissional CLAI (acesso completo):** `coordenacao@clai.ifpb.edu.br` / senha: `clai123456`
-     - **Consulta (acesso restrito):** `consulta@clai.ifpb.edu.br` / senha: `clai123456`
+Espere as aplicações inicializarem e abra em seu navegador https://localhost:5173
 
 ### Modo de Demonstração (sem backend)
 Caso deseje avaliar apenas a interface com dados fictícios em memória:

@@ -5,10 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="066d1bc5-e263-43d6-b707-e0911de6cb96" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/backend/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/apps/backend/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/frontend/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/apps/frontend/.gitignore" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -20,6 +19,7 @@
       <list>
         <option value="package-info" />
         <option value="Interface" />
+        <option value="Record" />
         <option value="Class" />
       </list>
     </option>
@@ -34,11 +34,73 @@
       </MavenGeneralSettings>
     </option>
   </component>
+  <component name="NextEditCompletionFeaturesState">
+    <decayedCancelled>
+      <entry key="MS100" value="1.0015218746393324" />
+      <entry key="MS500" value="1.346171321483709" />
+      <entry key="S2" value="3.5040813395927977" />
+      <entry key="S5" value="6.080307655284218" />
+      <entry key="S10" value="8.08026638170544" />
+      <entry key="S30" value="17.493035200992047" />
+      <entry key="S60" value="35.51827306005103" />
+      <entry key="M2" value="76.46077144129379" />
+      <entry key="M5" value="180.64977108198468" />
+      <entry key="M10" value="296.33679279867545" />
+      <entry key="M15" value="383.90991515848407" />
+      <entry key="M30" value="599.5704956383566" />
+      <entry key="H1" value="917.6978675235454" />
+      <entry key="H2" value="1272.5425945958068" />
+      <entry key="H4" value="1563.1963089306216" />
+      <entry key="D1" value="1903.578219906716" />
+      <entry key="W1" value="1973.8869042683175" />
+    </decayedCancelled>
+    <decayedSelected>
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="8.335784690051588E-232" />
+      <entry key="S2" value="1.6991691799719615E-58" />
+      <entry key="S5" value="7.800000828941795E-24" />
+      <entry key="S10" value="2.79284817712716E-12" />
+      <entry key="S30" value="1.4109717389227893E-4" />
+      <entry key="S60" value="0.0123905836215584" />
+      <entry key="M2" value="0.13565034461619926" />
+      <entry key="M5" value="1.196070434971723" />
+      <entry key="M10" value="5.1503632517847215" />
+      <entry key="M15" value="10.086326039758237" />
+      <entry key="M30" value="25.99896963419714" />
+      <entry key="H1" value="55.72618051320865" />
+      <entry key="H2" value="92.56505281948938" />
+      <entry key="H4" value="123.61346303485033" />
+      <entry key="D1" value="160.1604633682179" />
+      <entry key="W1" value="167.70147632260435" />
+    </decayedSelected>
+    <decayedShown>
+      <entry key="MS100" value="0.9474974279254369" />
+      <entry key="MS500" value="1.3313538600725552" />
+      <entry key="S2" value="3.494400931332858" />
+      <entry key="S5" value="6.073542470432266" />
+      <entry key="S10" value="8.074023837400636" />
+      <entry key="S30" value="17.47160609369718" />
+      <entry key="S60" value="35.50506263639409" />
+      <entry key="M2" value="76.57409936266224" />
+      <entry key="M5" value="181.8254172365201" />
+      <entry key="M10" value="301.46025178297083" />
+      <entry key="M15" value="393.9657745727995" />
+      <entry key="M30" value="625.5357280399562" />
+      <entry key="H1" value="973.3901348284593" />
+      <entry key="H2" value="1365.0799089446175" />
+      <entry key="H4" value="1686.7912912843153" />
+      <entry key="D1" value="2063.7346896253284" />
+      <entry key="W1" value="2141.587783009513" />
+    </decayedShown>
+  </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 4,
   &quot;fromUser&quot;: false
 }</component>
   <component name="ProjectId" id="3KpB4pIuSP1exlmDRIPV18vxKUZ" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="1" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -55,12 +117,14 @@
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "Spring Boot.ProjetoClaiApplication.executor": "Run",
     "Spring Boot.Unnamed.executor": "Run",
     "codeWithMe.voiceChat.enabledByDefault": "false",
-    "git-widget-placeholder": "development",
+    "git-widget-placeholder": "fix/remover__arquivos",
     "ignore.virus.scanning.warn.message": "true",
     "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/pedro/IdeaProjects/projetoCLAI",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -87,6 +151,13 @@
       </method>
     </configuration>
   </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-30f59d01ecdd-ac68fc9d2b05-intellij.indexing.shared.core-IU-263.7307.200" />
+      </set>
+    </attachedChunks>
+  </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="066d1bc5-e263-43d6-b707-e0911de6cb96" name="Changes" comment="" />
@@ -102,5 +173,16 @@
   </component>
   <component name="UnknownFeatures">
     <option featureType="com.intellij.fileTypeFactory" implementationName=".env" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/apps/backend/src/main/java/com/projetoCLAI/atendimento/AtendimentoController.java</url>
+          <line>48</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>
