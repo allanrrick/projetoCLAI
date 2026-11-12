@@ -139,4 +139,43 @@ public class AlunoController {
 
         return ResponseEntity.ok(atualizado);
     }
+
+
+    // Desativar aluno
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> desativar(
+            @PathVariable Long id) {
+
+        // Verificar se o aluno existe
+        Aluno aluno = alunoRepository.findById(id)
+                .orElse(null);
+
+        if (aluno == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of(
+                            "Erro", "Aluno não encontrado",
+                            "id", id
+                    ));
+        }
+
+        // Verificar se já está desativado
+        if (Boolean.FALSE.equals(aluno.getAtivo())) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of(
+                            "Erro", "Aluno já está desativado"
+                    ));
+        }
+
+        // Realizar exclusão lógica
+        aluno.setAtivo(false);
+
+        alunoRepository.save(aluno);
+
+        return ResponseEntity.ok(
+                Map.of(
+                        "Mensagem", "Aluno desativado com sucesso"
+                )
+        );
+    }
+
 }
