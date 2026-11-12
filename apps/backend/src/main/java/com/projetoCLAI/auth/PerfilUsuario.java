@@ -3,14 +3,18 @@ package com.projetoCLAI.auth;
 import java.util.List;
 
 public enum PerfilUsuario {
+
     PROFISSIONAL_CLAI(List.of(
             "alunos:consultar",
             "alunos:cadastrar",
+            "alunos:editar",
+            "alunos:desativar",
             "atendimentos:consultar",
             "atendimentos:cadastrar",
             "planos:consultar",
             "planos:cadastrar"
     )),
+
     ASSISTENTE(List.of(
             "alunos:consultar"
     ));
@@ -26,14 +30,21 @@ public enum PerfilUsuario {
     }
 
     public static PerfilUsuario fromString(String valor) {
+
         if (valor == null || valor.isBlank()) {
-            return PROFISSIONAL_CLAI;
+            throw new IllegalArgumentException(
+                    "Perfil de usuário não informado."
+            );
         }
+
         String normalizado = valor.trim().toUpperCase();
-        if ("ASSISTENTE".equals(normalizado) || "CONSULTA".equals(normalizado)) {
-            return ASSISTENTE;
-        }
-        return PROFISSIONAL_CLAI;
+
+        return switch (normalizado) {
+            case "PROFISSIONAL_CLAI" -> PROFISSIONAL_CLAI;
+            case "ASSISTENTE", "CONSULTA" -> ASSISTENTE;
+            default -> throw new IllegalArgumentException(
+                    "Perfil de usuário inválido."
+            );
+        };
     }
 }
-
