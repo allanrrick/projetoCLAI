@@ -13,4 +13,10 @@ public interface AlunoRepository
     boolean existsByEmail(String email);
 
     Aluno findByMatricula(String matricula);
+
+    boolean existsByMatriculaAndIdAlunoNot(
+            String matricula, Long idAluno);
+
+    boolean existsByEmailAndIdAlunoNot(
+            String email, Long idAluno);
 }
