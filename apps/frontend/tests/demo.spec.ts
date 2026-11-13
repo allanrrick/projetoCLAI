@@ -215,9 +215,9 @@ test('preenche e registra relatório de acompanhamento individualizado', async (
     .fill('Excelente progresso no semestre.')
   await page.getByRole('button', { name: 'Salvar relatório' }).click()
   await expect(
-    page
-      .getByRole('status')
-      .filter({ hasText: 'Relatório de acompanhamento registrado com sucesso.' }),
+    page.getByRole('status').filter({
+      hasText: 'Relatório de acompanhamento registrado com sucesso.',
+    }),
   ).toBeVisible()
   await expect(page.locator('.timeline')).toContainText('Banco de Dados I')
   await expect(page.locator('.timeline')).toContainText(
@@ -258,12 +258,10 @@ test('valida campos obrigatórios e registra o PEI do estudante', async ({
     .fill('Roteiros visuais antecipados e avaliação adaptada.')
   await page.getByRole('button', { name: 'Registrar PEI' }).click()
   await expect(
-    page
-      .getByRole('status')
-      .filter({
-        hasText:
-          'Plano Educacional Individualizado (PEI) registrado com sucesso.',
-      }),
+    page.getByRole('status').filter({
+      hasText:
+        'Plano Educacional Individualizado (PEI) registrado com sucesso.',
+    }),
   ).toBeVisible()
   await expect(page.locator('.timeline')).toContainText(
     'Intérprete de Libras e material visual.',
@@ -305,11 +303,9 @@ test('valida campos obrigatórios do PEA e verifica vínculo ao aluno e à disci
     .fill('Projeto prático incremental com feedback semanal.')
   await page.getByRole('button', { name: 'Registrar PEA' }).click()
   await expect(
-    page
-      .getByRole('status')
-      .filter({
-        hasText: 'Plano de Ensino Adaptado (PEA) registrado com sucesso.',
-      }),
+    page.getByRole('status').filter({
+      hasText: 'Plano de Ensino Adaptado (PEA) registrado com sucesso.',
+    }),
   ).toBeVisible()
   await expect(page.locator('.timeline > li')).toHaveCount(2)
   await page
@@ -378,4 +374,88 @@ test('acessa planos de ação pela lista de alunos, valida condicionais e separa
   await expect(
     page.getByText('Ainda não há planos de ação para este aluno'),
   ).toBeVisible()
+})
+
+test('cadastra cursos e disciplinas e impede duplicidade de nomes', async ({
+  page,
+}) => {
+  await page.goto('/cadastros-academicos')
+  await page.getByLabel('Nome do curso *').fill('Ciência de Dados')
+  await page
+    .getByRole('button', { name: 'Cadastrar curso', exact: true })
+    .click()
+  const cursos = page.getByRole('region', { name: 'Cursos', exact: true })
+  await expect(cursos.locator('tbody')).toContainText('Ciência de Dados')
+  await page.getByLabel('Nome do curso *').fill(' ciencia   DE DADOS ')
+  await page
+    .getByRole('button', { name: 'Cadastrar curso', exact: true })
+    .click()
+  await expect(cursos.getByRole('alert')).toContainText('Já existe um curso')
+  const disciplinas = page.getByRole('region', {
+    name: 'Disciplinas',
+    exact: true,
+  })
+  await expect(
+    disciplinas.getByText('Nenhuma disciplina cadastrada'),
+  ).toBeVisible()
+  await page.getByLabel('Nome da disciplina *').fill('Matemática Aplicada')
+  await page
+    .getByRole('button', { name: 'Cadastrar disciplina', exact: true })
+    .click()
+  await expect(disciplinas.locator('tbody')).toContainText(
+    'Matemática Aplicada',
+  )
+  await page.getByLabel('Nome da disciplina *').fill(' matematica   aplicada ')
+  await page
+    .getByRole('button', { name: 'Cadastrar disciplina', exact: true })
+    .click()
+  await expect(disciplinas.getByRole('alert')).toContainText(
+    'Já existe uma disciplina',
+  )
+  await expect(disciplinas.locator('tbody tr')).toHaveCount(1)
+})
+
+test('utiliza um curso recém-cadastrado no formulário de aluno', async ({
+  page,
+}) => {
+  await page.goto('/cadastros-academicos')
+  await page.getByLabel('Nome do curso *').fill('Ciências Biológicas')
+  await page
+    .getByRole('button', { name: 'Cadastrar curso', exact: true })
+    .click()
+  await expect(
+    page.getByRole('table', { name: 'Cursos cadastrados' }),
+  ).toContainText('Ciências Biológicas')
+  await page.getByRole('link', { name: 'Alunos', exact: true }).click()
+  await page.getByRole('link', { name: 'Cadastrar aluno', exact: true }).click()
+  await page.getByLabel('Curso *').selectOption('Ciências Biológicas')
+  await page.getByLabel('Nome completo *').fill('Estudante de Biologia')
+  await page.getByLabel('Matrícula *').fill('BIO001')
+  await page
+    .getByRole('button', { name: 'Cadastrar aluno', exact: true })
+    .click()
+  await expect(page.locator('tbody')).toContainText('Estudante de Biologia')
+  await expect(page.locator('tbody')).toContainText('Ciências Biológicas')
+})
+
+test('valida nomes em branco nos cadastros acadêmicos e mantém o layout em celular', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/cadastros-academicos')
+  for (const [label, botao, secao] of [
+    ['Nome do curso *', 'Cadastrar curso', 'Cursos'],
+    ['Nome da disciplina *', 'Cadastrar disciplina', 'Disciplinas'],
+  ]) {
+    await page.getByLabel(label).fill('   ')
+    await page.getByRole('button', { name: botao, exact: true }).click()
+    await expect(
+      page.getByRole('region', { name: secao, exact: true }).getByRole('alert'),
+    ).toContainText('apenas espaços')
+  }
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBeTruthy()
 })
