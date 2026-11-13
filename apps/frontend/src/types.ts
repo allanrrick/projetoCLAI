@@ -32,6 +32,14 @@ export type Aluno = {
 export type NovoAluno = Pick<Aluno, 'matricula' | 'nome' | 'curso'> & {
   email: string | null
 }
+export type Curso = {
+  idCurso: number
+  nome: string
+}
+export type Disciplina = {
+  idDisciplina: number
+  nome: string
+}
 export type Documento = { id: string; nome: string; url?: string }
 export type Atendimento = {
   idAtendimento: number

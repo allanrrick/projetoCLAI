@@ -1,6 +1,8 @@
 import type {
   Aluno,
   Atendimento,
+  Curso,
+  Disciplina,
   Documento,
   HistoricoParams,
   NovoAluno,
@@ -230,6 +232,38 @@ export const api = {
       : request<Aluno>('/alunos', {
           method: 'POST',
           body: JSON.stringify(input),
+        })
+  },
+  async cursos(signal?: AbortSignal): Promise<Curso[]> {
+    const result = demo
+      ? (await demo).getCursos()
+      : await request<Curso[]>('/academico/cursos', { signal })
+    if (!Array.isArray(result))
+      throw new ApiError('Não foi possível carregar os cursos.')
+    return result
+  },
+  async cadastrarCurso(nome: string): Promise<Curso> {
+    return demo
+      ? (await demo).cadastrarCurso(nome)
+      : request<Curso>('/academico/cursos', {
+          method: 'POST',
+          body: JSON.stringify({ nome }),
+        })
+  },
+  async disciplinas(signal?: AbortSignal): Promise<Disciplina[]> {
+    const result = demo
+      ? (await demo).getDisciplinas()
+      : await request<Disciplina[]>('/academico/disciplinas', { signal })
+    if (!Array.isArray(result))
+      throw new ApiError('Não foi possível carregar as disciplinas.')
+    return result
+  },
+  async cadastrarDisciplina(nome: string): Promise<Disciplina> {
+    return demo
+      ? (await demo).cadastrarDisciplina(nome)
+      : request<Disciplina>('/academico/disciplinas', {
+          method: 'POST',
+          body: JSON.stringify({ nome }),
         })
   },
   async atendimentos(

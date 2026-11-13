@@ -1,6 +1,8 @@
 import type {
   Aluno,
   Atendimento,
+  Curso,
+  Disciplina,
   HistoricoParams,
   NovoAluno,
   NovoAtendimento,
@@ -144,6 +146,47 @@ export function getAtendimentos(id: number, params: HistoricoParams = {}) {
       ),
   )
 }
+const cursos: Curso[] = [
+  'Análise e Desenvolvimento de Sistemas',
+  'Automação Industrial',
+  'Engenharia Civil',
+  'Engenharia de Controle e Automação',
+  'Licenciatura em Física',
+  'Licenciatura em Matemática',
+  'Técnico em Edificações',
+  'Técnico em Eletromecânica',
+  'Técnico em Informática',
+].map((nome, index) => ({ idCurso: index + 1, nome }))
+const disciplinas: Disciplina[] = []
+export const getCursos = () =>
+  structuredClone(cursos).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
+export const getDisciplinas = () =>
+  structuredClone(disciplinas).sort((a, b) =>
+    a.nome.localeCompare(b.nome, 'pt-BR'),
+  )
+export function cadastrarCurso(value: string): Curso {
+  const nome = value.trim().replace(/\s+/g, ' ')
+  if (!nome || nome.length > 100)
+    throw new ApiError('Informe o nome do curso com até 100 caracteres.', 400)
+  if (cursos.some((curso) => normalize(curso.nome) === normalize(nome)))
+    throw new ApiError('Já existe um curso com este nome.', 409)
+  const curso = { idCurso: cursos.length + 1, nome }
+  cursos.push(curso)
+  return structuredClone(curso)
+}
+export function cadastrarDisciplina(value: string): Disciplina {
+  const nome = value.trim().replace(/\s+/g, ' ')
+  if (!nome || nome.length > 150)
+    throw new ApiError(
+      'Informe o nome da disciplina com até 150 caracteres.',
+      400,
+    )
+  if (disciplinas.some((item) => normalize(item.nome) === normalize(nome)))
+    throw new ApiError('Já existe uma disciplina com este nome.', 409)
+  const disciplina = { idDisciplina: disciplinas.length + 1, nome }
+  disciplinas.push(disciplina)
+  return structuredClone(disciplina)
+}
 export function cadastrarAluno(input: NovoAluno): Aluno {
   if (
     alunos.some(
@@ -286,7 +329,8 @@ const peas: Pea[] = [
     docente: 'Prof. Marcos Vieira',
     objetivos: 'Desenvolver lógica de programação com exercícios guiados.',
     conteudos: 'Estruturas condicionais, laços de repetição e funções.',
-    estrategiasEnsino: 'Uso de fluxogramas visuais e monitoria individualizada.',
+    estrategiasEnsino:
+      'Uso de fluxogramas visuais e monitoria individualizada.',
     avaliacaoAdaptada:
       'Provas práticas em laboratório com tempo estendido em 50%.',
     dataCriacao: '2026-10-14',
@@ -347,9 +391,7 @@ const planosAcao: PlanoAcao[] = [
 export function getPlanosAcao(idAluno: number): PlanoAcao[] {
   const aluno = alunos.find((item) => item.idAluno === idAluno)
   if (!aluno) throw new ApiError('Aluno não encontrado.', 404)
-  return structuredClone(
-    planosAcao.filter((item) => item.idAluno === idAluno),
-  )
+  return structuredClone(planosAcao.filter((item) => item.idAluno === idAluno))
 }
 export function cadastrarPlanoAcao(input: NovoPlanoAcao): PlanoAcao {
   const aluno = alunos.find((item) => item.idAluno === input.idAluno)
