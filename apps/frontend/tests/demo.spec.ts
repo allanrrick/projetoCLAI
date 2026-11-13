@@ -9,7 +9,7 @@ test('lista alunos e combina busca, curso e situação', async ({ page }) => {
     page.getByText('Demonstração com dados fictícios.', { exact: false }),
   ).toBeVisible()
   await page
-    .getByRole('textbox', { name: 'Buscar alunos' })
+    .getByRole('combobox', { name: 'Buscar alunos' })
     .fill('ana oliveira')
   await expect(page.locator('tbody tr')).toHaveCount(1)
   await page
@@ -75,7 +75,8 @@ test('registra atendimento com anexo no aluno correto e consulta o histórico', 
   page,
 }) => {
   await page.goto('/atendimentos/novo?aluno=3')
-  await expect(page.getByLabel('Aluno *')).toHaveValue('3')
+  await expect(page.getByLabel('Aluno *')).toHaveValue('Clara Lima (exemplo)')
+  await expect(page.locator('input[name="idAluno"]')).toHaveValue('3')
   await page.getByLabel('Data *').fill('2026-10-15')
   await page.getByLabel('Hora *').fill('11:30')
   await page
@@ -217,7 +218,9 @@ test('preenche e registra relatório de acompanhamento individualizado', async (
   await expect(
     page
       .getByRole('status')
-      .filter({ hasText: 'Relatório de acompanhamento registrado com sucesso.' }),
+      .filter({
+        hasText: 'Relatório de acompanhamento registrado com sucesso.',
+      }),
   ).toBeVisible()
   await expect(page.locator('.timeline')).toContainText('Banco de Dados I')
   await expect(page.locator('.timeline')).toContainText(
@@ -258,12 +261,10 @@ test('valida campos obrigatórios e registra o PEI do estudante', async ({
     .fill('Roteiros visuais antecipados e avaliação adaptada.')
   await page.getByRole('button', { name: 'Registrar PEI' }).click()
   await expect(
-    page
-      .getByRole('status')
-      .filter({
-        hasText:
-          'Plano Educacional Individualizado (PEI) registrado com sucesso.',
-      }),
+    page.getByRole('status').filter({
+      hasText:
+        'Plano Educacional Individualizado (PEI) registrado com sucesso.',
+    }),
   ).toBeVisible()
   await expect(page.locator('.timeline')).toContainText(
     'Intérprete de Libras e material visual.',
@@ -305,11 +306,9 @@ test('valida campos obrigatórios do PEA e verifica vínculo ao aluno e à disci
     .fill('Projeto prático incremental com feedback semanal.')
   await page.getByRole('button', { name: 'Registrar PEA' }).click()
   await expect(
-    page
-      .getByRole('status')
-      .filter({
-        hasText: 'Plano de Ensino Adaptado (PEA) registrado com sucesso.',
-      }),
+    page.getByRole('status').filter({
+      hasText: 'Plano de Ensino Adaptado (PEA) registrado com sucesso.',
+    }),
   ).toBeVisible()
   await expect(page.locator('.timeline > li')).toHaveCount(2)
   await page

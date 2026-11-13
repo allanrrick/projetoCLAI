@@ -6,6 +6,8 @@ import { api } from '../lib/api'
 import { useAuth } from '../context'
 import { useResource } from '../hooks/useResource'
 import { FormActions, Loading, Notice, PageTitle } from '../components/common'
+import { AlunoAutocomplete } from '../components/AlunoAutocomplete'
+import type { Aluno } from '../types'
 
 function localDate() {
   const now = new Date()
@@ -21,6 +23,14 @@ export function AtendimentoForm() {
     loading,
     retry,
   } = useResource(api.alunos)
+  const [busca, setBusca] = useState<{
+    texto: string
+    aluno: Aluno | null
+  } | null>(null)
+  const alunoInicial = alunos?.find(
+    (aluno) => aluno.idAluno === Number(params.get('aluno')),
+  )
+  const alunoSelecionado = busca ? busca.aluno : alunoInicial
   const [files, setFiles] = useState<File[]>([])
   const [fileError, setFileError] = useState('')
   const [error, setError] = useState('')
@@ -53,15 +63,14 @@ export function AtendimentoForm() {
     if (pending) return
     const form = event.currentTarget
     const values = new FormData(form)
-    const idAluno = Number(values.get('idAluno'))
     const data = String(values.get('data'))
     const hora = String(values.get('hora'))
     const observacoes = String(values.get('observacoes')).trim()
-    const alunoSelecionado = alunos?.find((aluno) => aluno.idAluno === idAluno)
     if (!alunoSelecionado || !data || !hora || !observacoes) {
       setError('Selecione um aluno e preencha data, hora e observações.')
       return
     }
+    const idAluno = alunoSelecionado.idAluno
     setError('')
     setSuccess('')
     setPending(true)
@@ -80,6 +89,7 @@ export function AtendimentoForm() {
         })
       else {
         form.reset()
+        setBusca({ texto: '', aluno: null })
         setFiles([])
         setSuccess('Atendimento registrado com sucesso.')
       }
@@ -128,19 +138,27 @@ export function AtendimentoForm() {
                 <div className="form-grid">
                   <div className="field full">
                     <label htmlFor="idAluno">Aluno *</label>
-                    <select
+                    <AlunoAutocomplete
                       id="idAluno"
-                      name="idAluno"
-                      defaultValue={params.get('aluno') || ''}
+                      value={busca?.texto ?? alunoInicial?.nome ?? ''}
+                      selectedId={alunoSelecionado?.idAluno}
+                      placeholder="Digite pelo menos 3 caracteres do nome"
+                      onChange={(texto) => setBusca({ texto, aluno: null })}
+                      onSelect={(aluno) =>
+                        setBusca({ texto: aluno.nome, aluno })
+                      }
                       required
-                    >
-                      <option value="">Selecione o aluno</option>
-                      {alunos?.map((aluno) => (
-                        <option key={aluno.idAluno} value={aluno.idAluno}>
-                          {aluno.nome} · {aluno.matricula}
-                        </option>
-                      ))}
-                    </select>
+                    />
+                    <input
+                      type="hidden"
+                      name="idAluno"
+                      value={alunoSelecionado?.idAluno ?? ''}
+                    />
+                    {alunoSelecionado && (
+                      <small>
+                        {alunoSelecionado.matricula} · {alunoSelecionado.curso}
+                      </small>
+                    )}
                     {alunos?.length === 0 && (
                       <small>
                         Cadastre um aluno antes de registrar um atendimento.
