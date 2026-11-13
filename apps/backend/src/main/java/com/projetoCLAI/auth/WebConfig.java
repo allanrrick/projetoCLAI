@@ -23,7 +23,9 @@ public class WebConfig implements WebMvcConfigurer {
                         "/atendimentos",
                         "/atendimentos/**",
                         "/planos-acao",
-                        "/planos-acao/**"
+                        "/planos-acao/**",
+                        "/academico",
+                        "/academico/**"
                 )
                 .excludePathPatterns("/auth/**");
     }
