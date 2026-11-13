@@ -1,24 +1,25 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { UserPlus } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../lib/api'
-import { BackLink, FormActions, Notice, PageTitle } from '../components/common'
-
-const CURSOS_DISPONIVEIS = [
-  'Análise e Desenvolvimento de Sistemas',
-  'Automação Industrial',
-  'Engenharia Civil',
-  'Engenharia de Controle e Automação',
-  'Licenciatura em Física',
-  'Licenciatura em Matemática',
-  'Técnico em Edificações',
-  'Técnico em Eletromecânica',
-  'Técnico em Informática',
-] as const
+import { useResource } from '../hooks/useResource'
+import {
+  BackLink,
+  FormActions,
+  Loading,
+  Notice,
+  PageTitle,
+} from '../components/common'
 
 export function CadastroAluno() {
   const navigate = useNavigate()
+  const {
+    data: cursos,
+    error: cursosError,
+    loading,
+    retry,
+  } = useResource(api.cursos)
   const [error, setError] = useState('')
   const [pending, setPending] = useState(false)
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -73,62 +74,80 @@ export function CadastroAluno() {
             </div>
           </div>
           {error && <Notice>{error}</Notice>}
-          <form onSubmit={submit}>
-            <fieldset disabled={pending}>
-              <div className="form-grid">
-                <div className="field full">
-                  <label htmlFor="nome">Nome completo *</label>
-                  <input
-                    id="nome"
-                    name="nome"
-                    autoComplete="name"
-                    placeholder="Nome completo do aluno"
-                    maxLength={150}
-                    required
-                  />
-                </div>
-                <div className="field">
-                  <label htmlFor="matricula">Matrícula *</label>
-                  <input
-                    id="matricula"
-                    name="matricula"
-                    placeholder="Informe a matrícula"
-                    maxLength={20}
-                    required
-                  />
-                  <small>Use a matrícula institucional do aluno.</small>
-                </div>
-                <div className="field">
-                  <label htmlFor="email-aluno">E-mail</label>
-                  <input
-                    id="email-aluno"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    placeholder="aluno@exemplo.com"
-                    maxLength={150}
-                  />
-                  <small>Opcional. Usado para contato com o aluno.</small>
-                </div>
-                <div className="field full">
-                  <label htmlFor="curso">Curso *</label>
-                  <select id="curso" name="curso" defaultValue="" required>
-                    <option value="">Selecione o curso</option>
-                    {CURSOS_DISPONIVEIS.map((curso) => (
-                      <option key={curso} value={curso}>
-                        {curso}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+          {loading ? (
+            <Loading />
+          ) : cursosError ? (
+            <>
+              <Notice>{cursosError}</Notice>
+              <div className="form-actions">
+                <button className="button secondary" onClick={retry}>
+                  Tentar novamente
+                </button>
               </div>
-            </fieldset>
-            <FormActions
-              pending={pending}
-              to="/alunos"
-              label="Cadastrar aluno"
-            />
-          </form>
+            </>
+          ) : !cursos?.length ? (
+            <Notice>
+              Cadastre um curso antes de cadastrar alunos.{' '}
+              <Link to="/cadastros-academicos">Abrir cadastros acadêmicos</Link>
+            </Notice>
+          ) : (
+            <form onSubmit={submit}>
+              <fieldset disabled={pending}>
+                <div className="form-grid">
+                  <div className="field full">
+                    <label htmlFor="nome">Nome completo *</label>
+                    <input
+                      id="nome"
+                      name="nome"
+                      autoComplete="name"
+                      placeholder="Nome completo do aluno"
+                      maxLength={150}
+                      required
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="matricula">Matrícula *</label>
+                    <input
+                      id="matricula"
+                      name="matricula"
+                      placeholder="Informe a matrícula"
+                      maxLength={20}
+                      required
+                    />
+                    <small>Use a matrícula institucional do aluno.</small>
+                  </div>
+                  <div className="field">
+                    <label htmlFor="email-aluno">E-mail</label>
+                    <input
+                      id="email-aluno"
+                      name="email"
+                      type="email"
+                      autoComplete="email"
+                      placeholder="aluno@exemplo.com"
+                      maxLength={150}
+                    />
+                    <small>Opcional. Usado para contato com o aluno.</small>
+                  </div>
+                  <div className="field full">
+                    <label htmlFor="curso">Curso *</label>
+                    <select id="curso" name="curso" defaultValue="" required>
+                      <option value="">Selecione o curso</option>
+                      {cursos.map((curso) => (
+                        <option key={curso.idCurso} value={curso.nome}>
+                          {curso.nome}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </fieldset>
+              <FormActions
+                pending={pending}
+                to="/alunos"
+                label="Cadastrar aluno"
+              />
+            </form>
+          )}
         </section>
       </div>
     </>

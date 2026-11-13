@@ -119,6 +119,14 @@ public class AutorizacaoInterceptor implements HandlerInterceptor {
 
     private String resolverPermissao(String uri, String metodo) {
 
+        if (uri.equals("/academico/cursos") || uri.equals("/academico/disciplinas")) {
+            return switch (metodo) {
+                case "GET", "HEAD" -> "alunos:consultar";
+                case "POST" -> "alunos:cadastrar";
+                default -> null;
+            };
+        }
+
         if (uri.startsWith("/alunos")) {
 
             return switch (metodo) {

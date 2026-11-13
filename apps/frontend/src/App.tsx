@@ -32,6 +32,7 @@ import { Auth, useAuth } from './context'
 import { Empty, Loading, Notice, PageTitle } from './components/common'
 import { Alunos } from './pages/Alunos'
 import { CadastroAluno } from './pages/CadastroAluno'
+import { CadastrosAcademicos } from './pages/CadastrosAcademicos'
 import { AtendimentoForm } from './pages/AtendimentoForm'
 import { Historico } from './pages/Historico'
 import { PeaPage } from './pages/PeaPage'
@@ -132,6 +133,12 @@ function Layout() {
   }, [])
   const links = [
     {
+      to: '/cadastros-academicos',
+      label: 'Cadastros acadêmicos',
+      icon: GraduationCap,
+      permission: 'alunos:consultar',
+    },
+    {
       to: '/alunos',
       label: 'Alunos',
       icon: Users,
@@ -174,21 +181,23 @@ function Layout() {
       permission: 'planos:consultar',
     },
   ] as const
-  const section = location.pathname.startsWith('/historico')
-    ? 'Histórico'
-    : location.pathname.startsWith('/planos-acao')
-      ? 'Planos de ação'
-      : location.pathname.startsWith('/relatorios')
-        ? 'Relatórios'
-        : location.pathname.startsWith('/pei')
-          ? 'PEI'
-          : location.pathname.startsWith('/pea')
-            ? 'PEA'
-            : location.pathname.startsWith('/atendimentos')
-              ? 'Atendimentos'
-              : location.pathname.startsWith('/acesso')
-                ? 'Minha conta'
-                : 'Alunos'
+  const section = location.pathname.startsWith('/cadastros-academicos')
+    ? 'Cadastros acadêmicos'
+    : location.pathname.startsWith('/historico')
+      ? 'Histórico'
+      : location.pathname.startsWith('/planos-acao')
+        ? 'Planos de ação'
+        : location.pathname.startsWith('/relatorios')
+          ? 'Relatórios'
+          : location.pathname.startsWith('/pei')
+            ? 'PEI'
+            : location.pathname.startsWith('/pea')
+              ? 'PEA'
+              : location.pathname.startsWith('/atendimentos')
+                ? 'Atendimentos'
+                : location.pathname.startsWith('/acesso')
+                  ? 'Minha conta'
+                  : 'Alunos'
   useEffect(() => {
     document.title = `${section} · CLAI`
     document.getElementById('main-content')?.focus()
@@ -384,6 +393,14 @@ function Layout() {
                   <Guard permission="alunos:consultar">
                     <PlanosAcaoPage />
                   </Guard>
+                </Guard>
+              }
+            />
+            <Route
+              path="/cadastros-academicos"
+              element={
+                <Guard permission="alunos:consultar">
+                  <CadastrosAcademicos />
                 </Guard>
               }
             />

@@ -54,6 +54,21 @@ async function session(
     'planos:cadastrar',
   ],
 ) {
+  await page.route('**/api/academico/cursos', (route) =>
+    route.request().method() === 'GET'
+      ? route.fulfill({
+          json: [
+            { idCurso: 1, nome: 'Análise e Desenvolvimento de Sistemas' },
+            { idCurso: 2, nome: 'Engenharia Civil' },
+          ],
+        })
+      : route.fallback(),
+  )
+  await page.route('**/api/academico/disciplinas', (route) =>
+    route.request().method() === 'GET'
+      ? route.fulfill({ json: [] })
+      : route.fallback(),
+  )
   await page.route('**/api/auth/sessao', (route) =>
     route.fulfill({
       json: {
@@ -828,4 +843,262 @@ test('exibe a mensagem em português de application/problem+json e permite nova 
   await page.getByRole('button', { name: 'Tentar novamente' }).click()
   await expect(page.locator('.timeline > li')).toHaveCount(3)
   await expect(page.getByRole('alert')).toHaveCount(0)
+})
+
+test('cadastra cursos e disciplinas na mesma página com CSRF e atualiza as listas', async ({
+  page,
+}) => {
+  await session(page)
+  const cursos: { idCurso: number; nome: string }[] = []
+  const disciplinas: { idDisciplina: number; nome: string }[] = []
+  const enviados: unknown[] = []
+  const tokens: (string | undefined)[] = []
+  let liberar: () => void = () => {}
+  const respostaPendente = new Promise<void>((resolve) => {
+    liberar = resolve
+  })
+  await page.route('**/api/academico/cursos', async (route) => {
+    if (route.request().method() === 'GET')
+      return route.fulfill({ json: cursos })
+    const dados = route.request().postDataJSON()
+    enviados.push(dados)
+    tokens.push(route.request().headers()['x-csrf-token'])
+    await respostaPendente
+    const curso = { idCurso: 41, nome: dados.nome }
+    cursos.push(curso)
+    return route.fulfill({ status: 201, json: curso })
+  })
+  await page.route('**/api/academico/disciplinas', (route) => {
+    if (route.request().method() === 'GET')
+      return route.fulfill({ json: disciplinas })
+    const dados = route.request().postDataJSON()
+    enviados.push(dados)
+    tokens.push(route.request().headers()['x-csrf-token'])
+    const disciplina = { idDisciplina: 52, nome: dados.nome }
+    disciplinas.push(disciplina)
+    return route.fulfill({ status: 201, json: disciplina })
+  })
+  await page.goto('/cadastros-academicos')
+  const areaCursos = page.getByRole('region', { name: 'Cursos', exact: true })
+  const areaDisciplinas = page.getByRole('region', {
+    name: 'Disciplinas',
+    exact: true,
+  })
+  await expect(areaCursos.getByText('Nenhum curso cadastrado')).toBeVisible()
+  await expect(
+    areaDisciplinas.getByText('Nenhuma disciplina cadastrada'),
+  ).toBeVisible()
+  await page.getByLabel('Nome do curso *').fill('  Ciência   de Dados  ')
+  await page
+    .getByRole('button', { name: 'Cadastrar curso', exact: true })
+    .click()
+  try {
+    await expect(page.getByRole('button', { name: 'Salvando…' })).toBeDisabled()
+    await expect(page.getByLabel('Nome do curso *')).toBeDisabled()
+  } finally {
+    liberar()
+  }
+  await expect(
+    areaCursos
+      .getByRole('status')
+      .filter({ hasText: 'Curso cadastrado com sucesso.' }),
+  ).toHaveText('Curso cadastrado com sucesso.')
+  await expect(areaCursos.locator('tbody')).toContainText('Ciência de Dados')
+  await page.getByLabel('Nome da disciplina *').fill('  Banco   de Dados ')
+  await page
+    .getByRole('button', { name: 'Cadastrar disciplina', exact: true })
+    .click()
+  await expect(
+    areaDisciplinas
+      .getByRole('status')
+      .filter({ hasText: 'Disciplina cadastrada com sucesso.' }),
+  ).toHaveText('Disciplina cadastrada com sucesso.')
+  await expect(areaDisciplinas.locator('tbody')).toContainText('Banco de Dados')
+  expect(enviados).toEqual([
+    { nome: 'Ciência de Dados' },
+    { nome: 'Banco de Dados' },
+  ])
+  expect(tokens).toEqual(['csrf-teste', 'csrf-teste'])
+})
+
+test('consulta cadastros acadêmicos sem oferecer manutenção ao assistente', async ({
+  page,
+}) => {
+  await session(page, ['alunos:consultar'])
+  await page.route('**/api/academico/disciplinas', (route) =>
+    route.fulfill({ json: [{ idDisciplina: 1, nome: 'Algoritmos' }] }),
+  )
+  await page.goto('/alunos')
+  await page.getByRole('link', { name: 'Cadastros acadêmicos' }).click()
+  await expect(
+    page.getByRole('table', { name: 'Cursos cadastrados' }),
+  ).toContainText('Engenharia Civil')
+  await expect(
+    page.getByRole('table', { name: 'Disciplinas cadastradas' }),
+  ).toContainText('Algoritmos')
+  await expect(page.getByRole('textbox')).toHaveCount(0)
+  await expect(page.getByRole('button', { name: /^Cadastrar/ })).toHaveCount(0)
+})
+
+test('bloqueia acesso direto aos cadastros sem permissão e não consulta a API', async ({
+  page,
+}) => {
+  await session(page, [])
+  let consultou = false
+  await page.route('**/api/academico/*', (route) => {
+    consultou = true
+    return route.fulfill({ json: [] })
+  })
+  await page.goto('/cadastros-academicos')
+  await expect(
+    page.getByRole('heading', { name: 'Acesso restrito' }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole('link', { name: 'Cadastros acadêmicos' }),
+  ).toHaveCount(0)
+  expect(consultou).toBeFalsy()
+})
+
+test('trata carregamento e erro de cada cadastro sem bloquear a outra seção', async ({
+  page,
+}) => {
+  await session(page)
+  let liberar: () => void = () => {}
+  const respostaPendente = new Promise<void>((resolve) => {
+    liberar = resolve
+  })
+  await page.route('**/api/academico/cursos', async (route) => {
+    await respostaPendente
+    return route.fulfill({
+      status: 500,
+      json: { Erro: 'Falha ao consultar cursos.' },
+    })
+  })
+  await page.goto('/cadastros-academicos')
+  const cursos = page.getByRole('region', { name: 'Cursos', exact: true })
+  try {
+    await expect(cursos.getByRole('status')).toContainText('Carregando')
+    await expect(page.getByLabel('Nome da disciplina *')).toBeVisible()
+  } finally {
+    liberar()
+  }
+  await expect(cursos.getByRole('alert')).toContainText(
+    'Falha ao consultar cursos.',
+  )
+  await page.route('**/api/academico/cursos', (route) =>
+    route.fulfill({ json: [] }),
+  )
+  await cursos.getByRole('button', { name: 'Tentar novamente' }).click()
+  await expect(cursos.getByText('Nenhum curso cadastrado')).toBeVisible()
+  await expect(cursos.getByRole('alert')).toHaveCount(0)
+})
+
+test('mantém os campos após falhas de cadastro e exige login quando a sessão expira', async ({
+  page,
+}) => {
+  await session(page)
+  await page.route('**/api/academico/cursos', (route) =>
+    route.request().method() === 'GET'
+      ? route.fulfill({ json: [] })
+      : route.fallback(),
+  )
+  await page.goto('/cadastros-academicos')
+  const cursos = page.getByRole('region', { name: 'Cursos', exact: true })
+  await page.getByLabel('Nome do curso *').fill('Curso de teste')
+  for (const [status, mensagem] of [
+    [409, 'Já existe'],
+    [400, 'Dados inválidos.'],
+    [403, 'Você não tem permissão'],
+  ] as const) {
+    await page.route('**/api/academico/cursos', (route) =>
+      route.request().method() === 'POST'
+        ? route.fulfill({ status, json: { Erro: 'Dados inválidos.' } })
+        : route.fallback(),
+    )
+    await page
+      .getByRole('button', { name: 'Cadastrar curso', exact: true })
+      .click()
+    await expect(cursos.getByRole('alert')).toContainText(mensagem)
+    await expect(page.getByLabel('Nome do curso *')).toHaveValue(
+      'Curso de teste',
+    )
+    await expect(cursos.getByText('Nenhum curso cadastrado')).toBeVisible()
+  }
+  await page.route('**/api/academico/cursos', (route) =>
+    route.request().method() === 'POST'
+      ? route.abort('failed')
+      : route.fallback(),
+  )
+  await page
+    .getByRole('button', { name: 'Cadastrar curso', exact: true })
+    .click()
+  await expect(cursos.getByRole('alert')).toContainText(
+    'Não foi possível conectar',
+  )
+  await page.route('**/api/academico/cursos', (route) =>
+    route.request().method() === 'POST'
+      ? route.fulfill({ status: 401, json: {} })
+      : route.fallback(),
+  )
+  await page
+    .getByRole('button', { name: 'Cadastrar curso', exact: true })
+    .click()
+  await expect(
+    page.getByRole('heading', { name: 'Bem-vindo à CLAI' }),
+  ).toBeVisible()
+  await expect(page.getByRole('alert')).toContainText('Sua sessão expirou')
+})
+
+test('preenche o select de aluno com cursos da API e envia o nome do curso escolhido', async ({
+  page,
+}) => {
+  await session(page)
+  await page.route('**/api/academico/cursos', (route) =>
+    route.fulfill({ json: [{ idCurso: 41, nome: 'Curso da API' }] }),
+  )
+  let dados: unknown
+  await page.route('**/api/alunos', (route) => {
+    if (route.request().method() !== 'POST') return route.fallback()
+    dados = route.request().postDataJSON()
+    return route.fulfill({ status: 201, json: aluno })
+  })
+  await page.goto('/alunos/novo')
+  await expect(page.getByLabel('Curso *').locator('option')).toHaveCount(2)
+  await expect(
+    page.getByRole('option', { name: 'Engenharia Civil' }),
+  ).toHaveCount(0)
+  await page.getByLabel('Nome completo *').fill('Estudante de teste')
+  await page.getByLabel('Matrícula *').fill('CURSO001')
+  await page.getByLabel('Curso *').selectOption('Curso da API')
+  await page
+    .getByRole('button', { name: 'Cadastrar aluno', exact: true })
+    .click()
+  await expect(page).toHaveURL(/\/alunos$/)
+  expect(dados).toEqual({
+    nome: 'Estudante de teste',
+    matricula: 'CURSO001',
+    curso: 'Curso da API',
+    email: null,
+  })
+})
+
+test('informa erro ou ausência de cursos no cadastro de aluno sem usar uma lista fixa', async ({
+  page,
+}) => {
+  await session(page)
+  await page.route('**/api/academico/cursos', (route) =>
+    route.fulfill({ status: 500, json: { Erro: 'Cursos indisponíveis.' } }),
+  )
+  await page.goto('/alunos/novo')
+  await expect(page.getByRole('alert')).toContainText('Cursos indisponíveis.')
+  await expect(page.getByLabel('Curso *')).toHaveCount(0)
+  await page.route('**/api/academico/cursos', (route) =>
+    route.fulfill({ json: [] }),
+  )
+  await page.getByRole('button', { name: 'Tentar novamente' }).click()
+  await expect(page.getByRole('alert')).toContainText(
+    'Cadastre um curso antes de cadastrar alunos.',
+  )
+  await page.getByRole('link', { name: 'Abrir cadastros acadêmicos' }).click()
+  await expect(page).toHaveURL(/cadastros-academicos$/)
 })
