@@ -99,6 +99,23 @@ class HistoricoAtendimentoTests {
 	}
 
 	@Test
+	void retornaObservacoesCompletasQuandoAlunoPossuiUnicoAtendimento() throws Exception {
+		Aluno alunoComUmAtendimento = salvarAluno("UNICO001", "Diego Ferreira");
+		Atendimento unico = salvarAtendimento(alunoComUmAtendimento, "2026-10-18", "14:20",
+				"Observações detalhadas do único atendimento registrado.", "Paula Mendes", null);
+
+		mockMvc.perform(get("/atendimentos/{matricula}", alunoComUmAtendimento.getMatricula())
+				.session(sessao(PerfilUsuario.PROFISSIONAL_CLAI)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$", hasSize(1)))
+				.andExpect(jsonPath("$[0].id").value(unico.getId().intValue()))
+				.andExpect(jsonPath("$[0].data").value("2026-10-18"))
+				.andExpect(jsonPath("$[0].hora").value("14:20"))
+				.andExpect(jsonPath("$[0].observacoes").value("Observações detalhadas do único atendimento registrado."))
+				.andExpect(jsonPath("$[0].profissional").value("Paula Mendes"));
+	}
+
+	@Test
 	void retorna404ParaMatriculaInexistente() throws Exception {
 		mockMvc.perform(get("/atendimentos/INEXISTENTE")
 				.session(sessao(PerfilUsuario.PROFISSIONAL_CLAI)))
@@ -248,6 +265,7 @@ class HistoricoAtendimentoTests {
 
 	private MockHttpSession sessao(PerfilUsuario perfil) {
 		MockHttpSession session = new MockHttpSession();
+		session.setAttribute(AuthController.ATTR_USUARIO_ID, 1L);
 		session.setAttribute(AuthController.ATTR_USUARIO_EMAIL, "historico@example.com");
 		session.setAttribute(AuthController.ATTR_USUARIO_PERFIL, perfil.name());
 		return session;

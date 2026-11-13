@@ -829,3 +829,84 @@ test('exibe a mensagem em português de application/problem+json e permite nova 
   await expect(page.locator('.timeline > li')).toHaveCount(3)
   await expect(page.getByRole('alert')).toHaveCount(0)
 })
+
+test('exibe observações completas para 1 e 2+ atendimentos e estado vazio apenas com 0 atendimentos, inclusive após recarregar', async ({
+  page,
+}) => {
+  await session(page)
+  const alunoVazio = {
+    ...aluno,
+    idAluno: 2,
+    matricula: 'API002',
+    nome: 'Aluno Sem Histórico',
+  }
+  const alunoUnico = {
+    ...aluno,
+    idAluno: 3,
+    matricula: 'API003',
+    nome: 'Aluno Primeiro Atendimento',
+  }
+  await page.route('**/api/alunos', (route) =>
+    route.fulfill({ json: [aluno, alunoVazio, alunoUnico] }),
+  )
+  await page.route('**/api/atendimentos/API001*', (route) =>
+    route.fulfill({ json: historicoDesc }),
+  )
+  await page.route('**/api/atendimentos/API002*', (route) =>
+    route.fulfill({ json: [] }),
+  )
+  await page.route('**/api/atendimentos/API003*', (route) =>
+    route.fulfill({
+      json: [
+        {
+          id: 31,
+          data: '2026-10-18',
+          hora: '14:20:00',
+          observacoes: 'Observação real do primeiro atendimento.',
+          profissional: 'Paula Mendes',
+          documentoUrl: null,
+        },
+      ],
+    }),
+  )
+
+  await page.goto('/historico?aluno=2')
+  await expect(
+    page.getByText('Ainda não há atendimentos para este aluno'),
+  ).toBeVisible()
+  await expect(page.locator('.timeline')).toHaveCount(0)
+  await page.reload()
+  await expect(
+    page.getByText('Ainda não há atendimentos para este aluno'),
+  ).toBeVisible()
+
+  await page.getByLabel('Selecione um aluno').selectOption('3')
+  await expect(page.locator('.timeline > li')).toHaveCount(1)
+  await expect(page.locator('.timeline .observations')).toHaveText([
+    'Observação real do primeiro atendimento.',
+  ])
+  await expect(page.locator('.timeline h3')).toHaveText(['18/10/2026'])
+  await expect(page.locator('.timeline .timeline-header > span')).toHaveText([
+    '14:20',
+  ])
+  await expect(page.locator('.timeline .professional')).toHaveText([
+    'Registrado por Paula Mendes',
+  ])
+  await expect(
+    page.getByText('Ainda não há atendimentos para este aluno'),
+  ).toHaveCount(0)
+  await page.reload()
+  await expect(page.locator('.timeline .observations')).toHaveText([
+    'Observação real do primeiro atendimento.',
+  ])
+
+  await page.getByLabel('Selecione um aluno').selectOption('1')
+  await expect(page.locator('.timeline > li')).toHaveCount(3)
+  await expect(page.locator('.timeline .observations')).toHaveText([
+    'Revisão do plano de apoio',
+    'Apoio para adaptação acadêmica',
+    'Acolhimento inicial',
+  ])
+  await page.reload()
+  await expect(page.locator('.timeline > li')).toHaveCount(3)
+})
