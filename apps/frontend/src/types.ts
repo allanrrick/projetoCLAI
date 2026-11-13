@@ -47,6 +47,15 @@ export type HistoricoParams = {
   inicio?: string
   fim?: string
   ordem?: 'asc' | 'desc'
+  pagina?: number
+  tamanho?: number
+}
+export type HistoricoPaginado = {
+  itens: Atendimento[]
+  pagina: number
+  tamanho: number
+  totalItens: number
+  temMais: boolean
 }
 export type NovoAtendimento = Pick<
   Atendimento,

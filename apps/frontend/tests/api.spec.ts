@@ -38,6 +38,16 @@ const historicoAsc = [
 ]
 const historicoDesc = [...historicoAsc].reverse()
 
+function paginaHistorico(
+  itens: Record<string, unknown>[],
+  pagina = 0,
+  tamanho = 10,
+  totalItens = itens.length,
+  temMais = false,
+) {
+  return { itens, pagina, tamanho, totalItens, temMais }
+}
+
 async function freezeClock(page: Page) {
   await page.clock.install({ time: new Date('2026-10-19T12:00:00Z') })
   await page.clock.pauseAt(new Date('2026-10-19T12:01:00Z'))
@@ -110,7 +120,7 @@ test('esconde ações sem permissão e bloqueia a navegação direta sem consult
   let requested = false
   await page.route('**/api/atendimentos/API001*', (route) => {
     requested = true
-    return route.fulfill({ json: [] })
+    return route.fulfill({ json: paginaHistorico([]) })
   })
   await page.goto('/alunos')
   await expect(page.locator('tbody')).toContainText('Aluno da API')
@@ -149,7 +159,7 @@ test('trata 403 sem expor registros e permite tentar novamente', async ({
   await expect(page.getByRole('alert')).toContainText('Você não tem permissão')
   await expect(page.locator('.timeline')).toHaveCount(0)
   await page.route('**/api/atendimentos/API001*', (route) =>
-    route.fulfill({ json: [] }),
+    route.fulfill({ json: paginaHistorico([]) }),
   )
   await page.getByRole('button', { name: 'Tentar novamente' }).click()
   await expect(
@@ -207,7 +217,7 @@ test('envia atendimento multipart com matrícula, data, hora, observações e do
   })
   await page.route('**/api/atendimentos/API001*', (route) =>
     route.fulfill({
-      json: [
+      json: paginaHistorico([
         {
           id: 1,
           data: '2026-10-15',
@@ -217,7 +227,7 @@ test('envia atendimento multipart com matrícula, data, hora, observações e do
             'uploads/123e4567-e89b-12d3-a456-426614174000_teste.pdf',
           profissional: 'Pessoa teste',
         },
-      ],
+      ]),
     }),
   )
   await page.goto('/atendimentos/novo?aluno=1')
@@ -369,7 +379,7 @@ test('não cria links de anexo para scripts ou origens externas', async ({
   await session(page)
   await page.route('**/api/atendimentos/API001*', (route) =>
     route.fulfill({
-      json: [
+      json: paginaHistorico([
         {
           idAtendimento: 1,
           idAluno: 1,
@@ -391,7 +401,7 @@ test('não cria links de anexo para scripts ou origens externas', async ({
             },
           ],
         },
-      ],
+      ]),
     }),
   )
   await page.goto('/historico?aluno=1')
@@ -440,8 +450,9 @@ test('consulta pela matrícula e apresenta a ordem do servidor com data, hora e 
     const url = new URL(route.request().url())
     consultas.push(url)
     return route.fulfill({
-      json:
+      json: paginaHistorico(
         url.searchParams.get('ordem') === 'asc' ? historicoAsc : historicoDesc,
+      ),
     })
   })
   await page.goto('/historico?aluno=1')
@@ -454,6 +465,8 @@ test('consulta pela matrícula e apresenta a ordem do servidor com data, hora e 
   expect(consultas.at(-1)?.pathname).toBe('/api/atendimentos/API001')
   expect(Object.fromEntries(consultas.at(-1)!.searchParams)).toEqual({
     ordem: 'desc',
+    pagina: '0',
+    tamanho: '10',
   })
   await expect(itens.locator('h3')).toHaveText([
     '15/10/2026',
@@ -516,9 +529,11 @@ test('aguarda 300 ms após a última alteração da busca e envia o texto aparad
     const url = new URL(route.request().url())
     consultas.push(url)
     return route.fulfill({
-      json: url.searchParams.has('q')
-        ? [historicoAsc[2], historicoAsc[1]]
-        : historicoDesc,
+      json: paginaHistorico(
+        url.searchParams.has('q')
+          ? [historicoAsc[2], historicoAsc[1]]
+          : historicoDesc,
+      ),
     })
   })
   await page.goto('/historico?aluno=1')
@@ -546,6 +561,8 @@ test('aguarda 300 ms após a última alteração da busca e envia o texto aparad
   expect(Object.fromEntries(consultas.at(-1)!.searchParams)).toEqual({
     q: 'apoio',
     ordem: 'desc',
+    pagina: '0',
+    tamanho: '10',
   })
   await expect(busca).toHaveValue('  apoio  ')
 })
@@ -563,7 +580,7 @@ test('combina busca, período e ordem na API e limpa todos os filtros', async ({
     if (url.searchParams.has('inicio'))
       resposta = [historicoAsc[1], historicoAsc[2]]
     if (url.searchParams.has('q')) resposta = [historicoAsc[1]]
-    return route.fulfill({ json: resposta })
+    return route.fulfill({ json: paginaHistorico(resposta) })
   })
   await page.goto('/historico?aluno=1')
   const contador = page.locator('.result-count')
@@ -593,6 +610,8 @@ test('combina busca, período e ordem na API e limpa todos os filtros', async ({
     inicio: '2026-10-15',
     fim: '2026-10-15',
     ordem: 'asc',
+    pagina: '0',
+    tamanho: '10',
   })
   await page.getByRole('button', { name: 'Limpar filtros' }).click()
   await expect(contador).toHaveText('3 atendimentos encontrados')
@@ -605,6 +624,8 @@ test('combina busca, período e ordem na API e limpa todos os filtros', async ({
   ).toHaveCount(0)
   expect(Object.fromEntries(consultas.at(-1)!.searchParams)).toEqual({
     ordem: 'desc',
+    pagina: '0',
+    tamanho: '10',
   })
   await expect(page.locator('.timeline .observations')).toHaveText([
     'Revisão do plano de apoio',
@@ -620,7 +641,7 @@ test('distingue aluno sem histórico de consulta sem resultados e anuncia o cont
   const consultas: URL[] = []
   await page.route('**/api/atendimentos/API001*', (route) => {
     consultas.push(new URL(route.request().url()))
-    return route.fulfill({ json: [] })
+    return route.fulfill({ json: paginaHistorico([]) })
   })
   await page.goto('/historico?aluno=1')
   const semHistorico = page.getByRole('heading', {
@@ -657,7 +678,9 @@ test('avisa sobre intervalo inválido sem consultar a API e permite corrigir as 
     const url = new URL(route.request().url())
     consultas.push(url)
     return route.fulfill({
-      json: url.searchParams.has('inicio') ? [] : historicoDesc,
+      json: paginaHistorico(
+        url.searchParams.has('inicio') ? [] : historicoDesc,
+      ),
     })
   })
   await page.goto('/historico?aluno=1')
@@ -747,23 +770,25 @@ test('cancela a consulta pendente ao trocar de aluno e preserva o histórico atu
   let concluidas = 0
   await page.route('**/api/atendimentos/API001*', async (route) => {
     if (new URL(route.request().url()).searchParams.get('q') !== 'pendente')
-      return route.fulfill({ json: historicoDesc })
+      return route.fulfill({ json: paginaHistorico(historicoDesc) })
     pendentes += 1
     await respostaAntiga
     await route.fulfill({
-      json: [{ ...historicoAsc[0], observacoes: 'Resposta antiga pendente' }],
+      json: paginaHistorico([
+        { ...historicoAsc[0], observacoes: 'Resposta antiga pendente' },
+      ]),
     })
     concluidas += 1
   })
   await page.route('**/api/atendimentos/API002*', (route) =>
     route.fulfill({
-      json: [
+      json: paginaHistorico([
         {
           ...historicoAsc[0],
           id: 21,
           observacoes: 'Histórico do outro aluno',
         },
-      ],
+      ]),
     }),
   )
   try {
@@ -823,9 +848,152 @@ test('exibe a mensagem em português de application/problem+json e permite nova 
   )
   await expect(page.locator('.timeline')).toHaveCount(0)
   await page.route('**/api/atendimentos/API001*', (route) =>
-    route.fulfill({ json: historicoDesc }),
+    route.fulfill({ json: paginaHistorico(historicoDesc) }),
   )
   await page.getByRole('button', { name: 'Tentar novamente' }).click()
   await expect(page.locator('.timeline > li')).toHaveCount(3)
   await expect(page.getByRole('alert')).toHaveCount(0)
+})
+
+test('pagina o histórico com Carregar mais atendimentos, reinicia ao filtrar ou trocar de aluno e preserva itens em falha', async ({
+  page,
+}) => {
+  await session(page)
+  const segundoAluno = {
+    ...aluno,
+    idAluno: 2,
+    matricula: 'API002',
+    nome: 'Segundo Aluno',
+  }
+  const paginaZeroDesc = [historicoDesc[0], historicoDesc[1]]
+  const paginaUmDesc = [historicoDesc[1], historicoDesc[2]] // id 12 repetido de propósito para testar deduplicação
+  const consultas: URL[] = []
+  let falharProximaPagina = false
+
+  await page.route('**/api/alunos', (route) =>
+    route.fulfill({ json: [aluno, segundoAluno] }),
+  )
+  await page.route('**/api/atendimentos/API001*', (route) => {
+    const url = new URL(route.request().url())
+    consultas.push(url)
+    const pagina = Number(url.searchParams.get('pagina') || '0')
+    const ordem = url.searchParams.get('ordem') || 'desc'
+    const q = url.searchParams.get('q') || ''
+
+    if (pagina === 1 && falharProximaPagina) {
+      return route.fulfill({
+        status: 500,
+        contentType: 'application/problem+json',
+        body: JSON.stringify({ detail: 'Falha ao carregar página seguinte.' }),
+      })
+    }
+
+    if (q) {
+      return route.fulfill({
+        json: paginaHistorico([historicoAsc[0]], 0, 10, 1, false),
+      })
+    }
+    if (ordem === 'asc') {
+      if (pagina === 0) {
+        return route.fulfill({
+          json: paginaHistorico([historicoAsc[0], historicoAsc[1]], 0, 10, 3, true),
+        })
+      }
+      return route.fulfill({
+        json: paginaHistorico([historicoAsc[2]], 1, 10, 3, false),
+      })
+    }
+
+    if (pagina === 0) {
+      return route.fulfill({
+        json: paginaHistorico(paginaZeroDesc, 0, 10, 3, true),
+      })
+    }
+    return route.fulfill({
+      json: paginaHistorico(paginaUmDesc, 1, 10, 3, false),
+    })
+  })
+  await page.route('**/api/atendimentos/API002*', (route) => {
+    consultas.push(new URL(route.request().url()))
+    return route.fulfill({
+      json: paginaHistorico(
+        [
+          {
+            id: 21,
+            data: '2026-10-16',
+            hora: '11:00:00',
+            observacoes: 'Atendimento único do segundo aluno',
+            profissional: 'Carla Dias',
+            documentoUrl: null,
+          },
+        ],
+        0,
+        10,
+        1,
+        false,
+      ),
+    })
+  })
+
+  await page.goto('/historico?aluno=1')
+  await expect(page.locator('.result-count')).toHaveText(
+    '3 atendimentos encontrados',
+  )
+  await expect(page.locator('.timeline .observations')).toHaveText([
+    'Revisão do plano de apoio',
+    'Apoio para adaptação acadêmica',
+  ])
+  const botaoCarregarMais = page.getByRole('button', {
+    name: 'Carregar mais atendimentos',
+  })
+  await expect(botaoCarregarMais).toBeVisible()
+
+  // Falha na página 1 preserva itens já carregados
+  falharProximaPagina = true
+  await botaoCarregarMais.click()
+  await expect(page.getByRole('alert')).toHaveText(
+    'Falha ao carregar página seguinte.',
+  )
+  await expect(page.locator('.timeline .observations')).toHaveText([
+    'Revisão do plano de apoio',
+    'Apoio para adaptação acadêmica',
+  ])
+  await expect(botaoCarregarMais).toBeVisible()
+
+  // Nova tentativa carrega página 1 sem duplicar id 12 e oculta o botão ao terminar
+  falharProximaPagina = false
+  await botaoCarregarMais.click()
+  await expect(page.getByRole('alert')).toHaveCount(0)
+  await expect(page.locator('.timeline .observations')).toHaveText([
+    'Revisão do plano de apoio',
+    'Apoio para adaptação acadêmica',
+    'Acolhimento inicial',
+  ])
+  await expect(botaoCarregarMais).toHaveCount(0)
+
+  // Alterar ordenação reinicia paginação para página 0
+  await page.getByLabel('Ordenação').selectOption('asc')
+  await expect(page.locator('.timeline .observations')).toHaveText([
+    'Acolhimento inicial',
+    'Apoio para adaptação acadêmica',
+  ])
+  expect(consultas.at(-1)?.searchParams.get('pagina')).toBe('0')
+  await expect(botaoCarregarMais).toBeVisible()
+
+  // Aplicar busca reinicia paginação para página 0
+  await page.getByLabel('Buscar no histórico').fill('acolhimento')
+  await expect(page.locator('.timeline .observations')).toHaveText([
+    'Acolhimento inicial',
+  ])
+  expect(consultas.at(-1)?.searchParams.get('pagina')).toBe('0')
+  await expect(botaoCarregarMais).toHaveCount(0)
+
+  // Trocar de aluno reinicia paginação para página 0
+  await page.getByLabel('Selecione um aluno').selectOption('2')
+  await expect(page.locator('.timeline .observations')).toHaveText([
+    'Atendimento único do segundo aluno',
+  ])
+  expect(consultas.at(-1)?.pathname).toBe('/api/atendimentos/API002')
+  expect(consultas.at(-1)?.searchParams.get('pagina')).toBe('0')
+  await expect(botaoCarregarMais).toHaveCount(0)
 })

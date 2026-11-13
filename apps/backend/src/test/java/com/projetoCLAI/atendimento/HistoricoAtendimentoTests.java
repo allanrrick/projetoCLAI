@@ -95,7 +95,11 @@ class HistoricoAtendimentoTests {
 		mockMvc.perform(get("/atendimentos/{matricula}", alunoSemHistorico.getMatricula())
 				.session(sessao(PerfilUsuario.PROFISSIONAL_CLAI)))
 				.andExpect(status().isOk())
-				.andExpect(content().json("[]"));
+				.andExpect(jsonPath("$.itens", hasSize(0)))
+				.andExpect(jsonPath("$.pagina").value(0))
+				.andExpect(jsonPath("$.tamanho").value(10))
+				.andExpect(jsonPath("$.totalItens").value(0))
+				.andExpect(jsonPath("$.temMais").value(false));
 	}
 
 	@Test
@@ -112,16 +116,20 @@ class HistoricoAtendimentoTests {
 		mockMvc.perform(consultar().param("q", "organizacao"))
 				.andExpect(status().isOk())
 				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-				.andExpect(jsonPath("$", hasSize(1)))
-				.andExpect(jsonPath("$[0].*", hasSize(6)))
-				.andExpect(jsonPath("$[0].id").value(tarde.getId().intValue()))
-				.andExpect(jsonPath("$[0].data").value("2026-10-12"))
-				.andExpect(jsonPath("$[0].hora").value("16:45"))
-				.andExpect(jsonPath("$[0].observacoes").value(tarde.getObservacoes()))
-				.andExpect(jsonPath("$[0].profissional").value("Ana Souza"))
-				.andExpect(jsonPath("$[0].documentoUrl").value(tarde.getDocumentoUrl()))
-				.andExpect(jsonPath("$[0].aluno").doesNotExist())
-				.andExpect(jsonPath("$[0].idAtendimento").doesNotExist());
+				.andExpect(jsonPath("$.itens", hasSize(1)))
+				.andExpect(jsonPath("$.pagina").value(0))
+				.andExpect(jsonPath("$.tamanho").value(10))
+				.andExpect(jsonPath("$.totalItens").value(1))
+				.andExpect(jsonPath("$.temMais").value(false))
+				.andExpect(jsonPath("$.itens[0].*", hasSize(6)))
+				.andExpect(jsonPath("$.itens[0].id").value(tarde.getId().intValue()))
+				.andExpect(jsonPath("$.itens[0].data").value("2026-10-12"))
+				.andExpect(jsonPath("$.itens[0].hora").value("16:45"))
+				.andExpect(jsonPath("$.itens[0].observacoes").value(tarde.getObservacoes()))
+				.andExpect(jsonPath("$.itens[0].profissional").value("Ana Souza"))
+				.andExpect(jsonPath("$.itens[0].documentoUrl").value(tarde.getDocumentoUrl()))
+				.andExpect(jsonPath("$.itens[0].aluno").doesNotExist())
+				.andExpect(jsonPath("$.itens[0].idAtendimento").doesNotExist());
 	}
 
 	@ParameterizedTest
@@ -227,6 +235,59 @@ class HistoricoAtendimentoTests {
 				.andExpect(status().isForbidden());
 	}
 
+	@Test
+	void paginaHistoricoMantendoOrdemSemDuplicacao() throws Exception {
+		verificarOrdem(mockMvc.perform(consultar().param("pagina", "0").param("tamanho", "2")),
+				finalDoPeriodo, tarde)
+				.andExpect(jsonPath("$.pagina").value(0))
+				.andExpect(jsonPath("$.tamanho").value(2))
+				.andExpect(jsonPath("$.totalItens").value(4))
+				.andExpect(jsonPath("$.temMais").value(true));
+
+		verificarOrdem(mockMvc.perform(consultar().param("pagina", "1").param("tamanho", "2")),
+				manha, inicial)
+				.andExpect(jsonPath("$.pagina").value(1))
+				.andExpect(jsonPath("$.tamanho").value(2))
+				.andExpect(jsonPath("$.totalItens").value(4))
+				.andExpect(jsonPath("$.temMais").value(false));
+
+		verificarOrdem(mockMvc.perform(consultar().param("pagina", "2").param("tamanho", "2")))
+				.andExpect(jsonPath("$.pagina").value(2))
+				.andExpect(jsonPath("$.tamanho").value(2))
+				.andExpect(jsonPath("$.totalItens").value(4))
+				.andExpect(jsonPath("$.temMais").value(false));
+	}
+
+	@Test
+	void paginaComDesempateDeterministicoQuandoDataEHoraCoincidem() throws Exception {
+		Aluno alunoEmpate = salvarAluno("EMPATE01", "Lucas Vieira");
+		Atendimento primeiro = salvarAtendimento(alunoEmpate, "2026-10-19", "10:00",
+				"Primeiro registro no mesmo horário", "Ana Souza", null);
+		Atendimento segundo = salvarAtendimento(alunoEmpate, "2026-10-19", "10:00",
+				"Segundo registro no mesmo horário", "Ana Souza", null);
+
+		verificarOrdem(mockMvc.perform(get("/atendimentos/{matricula}", alunoEmpate.getMatricula())
+				.session(sessao(PerfilUsuario.PROFISSIONAL_CLAI))
+				.param("ordem", "desc")
+				.param("pagina", "0")
+				.param("tamanho", "1")), segundo)
+				.andExpect(jsonPath("$.temMais").value(true));
+
+		verificarOrdem(mockMvc.perform(get("/atendimentos/{matricula}", alunoEmpate.getMatricula())
+				.session(sessao(PerfilUsuario.PROFISSIONAL_CLAI))
+				.param("ordem", "desc")
+				.param("pagina", "1")
+				.param("tamanho", "1")), primeiro)
+				.andExpect(jsonPath("$.temMais").value(false));
+	}
+
+	@ParameterizedTest
+	@CsvSource({ "pagina, -1", "tamanho, 0", "tamanho, 51" })
+	void rejeitaPaginaOuTamanhoInvalidos(String parametro, String valor) throws Exception {
+		mockMvc.perform(consultar().param(parametro, valor))
+				.andExpect(status().isBadRequest());
+	}
+
 	private Aluno salvarAluno(String matricula, String nome) {
 		Aluno novoAluno = new Aluno();
 		novoAluno.setMatricula(matricula);
@@ -248,19 +309,21 @@ class HistoricoAtendimentoTests {
 
 	private MockHttpSession sessao(PerfilUsuario perfil) {
 		MockHttpSession session = new MockHttpSession();
+		session.setAttribute(AuthController.ATTR_USUARIO_ID, 1L);
 		session.setAttribute(AuthController.ATTR_USUARIO_EMAIL, "historico@example.com");
 		session.setAttribute(AuthController.ATTR_USUARIO_PERFIL, perfil.name());
 		return session;
 	}
 
-	private void verificarOrdem(ResultActions resultado, Atendimento... esperados) throws Exception {
+	private ResultActions verificarOrdem(ResultActions resultado, Atendimento... esperados) throws Exception {
 		resultado.andExpect(status().isOk())
 				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-				.andExpect(jsonPath("$", hasSize(esperados.length)));
+				.andExpect(jsonPath("$.itens", hasSize(esperados.length)));
 		for (int indice = 0; indice < esperados.length; indice++) {
-			resultado.andExpect(jsonPath("$[" + indice + "].id").value(esperados[indice].getId().intValue()))
-					.andExpect(jsonPath("$[" + indice + "].data").value(esperados[indice].getData()))
-					.andExpect(jsonPath("$[" + indice + "].hora").value(esperados[indice].getHora()));
+			resultado.andExpect(jsonPath("$.itens[" + indice + "].id").value(esperados[indice].getId().intValue()))
+					.andExpect(jsonPath("$.itens[" + indice + "].data").value(esperados[indice].getData()))
+					.andExpect(jsonPath("$.itens[" + indice + "].hora").value(esperados[indice].getHora()));
 		}
+		return resultado;
 	}
 }

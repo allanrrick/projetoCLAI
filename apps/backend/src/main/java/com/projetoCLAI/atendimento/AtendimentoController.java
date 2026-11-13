@@ -4,7 +4,7 @@ import com.projetoCLAI.aluno.Aluno;
 import com.projetoCLAI.aluno.AlunoRepository;
 import com.projetoCLAI.atendimento.atendimentoDTO.AtendimentoResponseDTO;
 import com.projetoCLAI.atendimento.atendimentoDTO.CadastroAtendimentoDTO;
-import com.projetoCLAI.atendimento.atendimentoDTO.HistoricoAtendimentoDTO;
+import com.projetoCLAI.atendimento.atendimentoDTO.HistoricoAtendimentoPaginadoDTO;
 import com.projetoCLAI.auth.AuthController;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -86,19 +86,21 @@ public class AtendimentoController {
     }
 
 	@GetMapping("/{matricula}")
-	public ResponseEntity<List<HistoricoAtendimentoDTO>> listarPorMatricula(
+	public ResponseEntity<HistoricoAtendimentoPaginadoDTO> listarPorMatricula(
 			@PathVariable String matricula,
 			@RequestParam(required = false) String q,
 			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
 			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fim,
-			@RequestParam(defaultValue = "desc") String ordem) {
+			@RequestParam(defaultValue = "desc") String ordem,
+			@RequestParam(defaultValue = "0") int pagina,
+			@RequestParam(defaultValue = "10") int tamanho) {
 		if (!alunoRepository.existsByMatricula(matricula)) {
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Aluno não encontrado com a matrícula: " + matricula);
 		}
 
-		List<HistoricoAtendimentoDTO> atendimentos = atendimentoService
-				.consultarHistorico(matricula, q, inicio, fim, ordem);
-		return ResponseEntity.ok(atendimentos);
+		HistoricoAtendimentoPaginadoDTO historico = atendimentoService
+				.consultarHistorico(matricula, q, inicio, fim, ordem, pagina, tamanho);
+		return ResponseEntity.ok(historico);
 	}
 
 	@ExceptionHandler(ResponseStatusException.class)

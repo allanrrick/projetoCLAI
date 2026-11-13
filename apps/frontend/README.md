@@ -63,7 +63,7 @@ Todas as chamadas partem de `VITE_API_BASE_URL` (padrão `/api`), usam cookies d
 ### Atendimentos (`/atendimentos`)
 
 - `POST /atendimentos`: recebe `multipart/form-data` com `matricula`, `data`, `hora`, `observacoes` e `documento` opcional (requer `atendimentos:cadastrar`).
-- `GET /atendimentos/{matricula}`: retorna o histórico do aluno como uma lista de `HistoricoAtendimentoDTO` (requer `atendimentos:consultar`).
+- `GET /atendimentos/{matricula}`: retorna o histórico paginado do aluno (`HistoricoAtendimentoPaginadoDTO`) (requer `atendimentos:consultar`).
 - `GET /atendimentos/documentos/{nomeFicheiro}`: realiza o download do documento anexado (requer `atendimentos:consultar`).
 
 #### Consulta do histórico
@@ -75,37 +75,45 @@ Todos os parâmetros de consulta são opcionais:
 | `q`       | Texto           | Busca em observações, profissional e nome do anexo, sem diferenciar maiúsculas, minúsculas ou acentos. Espaços externos são removidos; texto vazio ou só com espaços é ignorado. O diretório e o prefixo UUID do anexo não participam da busca. |
 | `inicio`  | `yyyy-MM-dd`    | Inclui atendimentos a partir desta data, inclusive.                                                                                                                                                                                             |
 | `fim`     | `yyyy-MM-dd`    | Inclui atendimentos até esta data, inclusive.                                                                                                                                                                                                   |
-| `ordem`   | `asc` ou `desc` | Ordena por data e depois por hora. O padrão é `desc` (mais recentes primeiro).                                                                                                                                                                  |
+| `ordem`   | `asc` ou `desc` | Ordena por data, hora e identificador. O padrão é `desc` (mais recentes primeiro).                                                                                                                                                              |
+| `pagina`  | Inteiro >= 0    | Índice da página desejada (base 0). O padrão é `0`.                                                                                                                                                                                             |
+| `tamanho` | Inteiro 1..50   | Quantidade máxima de registros por página. O padrão é `10`.                                                                                                                                                                                     |
 
-Busca, período e ordenação podem ser combinados. É possível informar somente uma das datas ou consultar um único dia com `inicio` igual a `fim`.
+Busca, período, ordenação e paginação podem ser combinados. É possível informar somente uma das datas ou consultar um único dia com `inicio` igual a `fim`.
 
 ```http
-GET /atendimentos/API001?q=orientacao&inicio=2026-10-01&fim=2026-10-31&ordem=asc
+GET /atendimentos/API001?q=orientacao&inicio=2026-10-01&fim=2026-10-31&ordem=asc&pagina=0&tamanho=10
 ```
 
 Resposta `200 OK`:
 
 ```json
-[
-  {
-    "id": 42,
-    "data": "2026-10-15",
-    "hora": "09:30",
-    "observacoes": "Orientação sobre recursos de acessibilidade.",
-    "profissional": "Profissional CLAI",
-    "documentoUrl": null
-  }
-]
+{
+  "itens": [
+    {
+      "id": 42,
+      "data": "2026-10-15",
+      "hora": "09:30",
+      "observacoes": "Orientação sobre recursos de acessibilidade.",
+      "profissional": "Profissional CLAI",
+      "documentoUrl": null
+    }
+  ],
+  "pagina": 0,
+  "tamanho": 10,
+  "totalItens": 1,
+  "temMais": false
+}
 ```
 
-O contrato contém somente `id`, `data`, `hora`, `observacoes`, `profissional` e `documentoUrl`. Um anexo ausente é representado por `documentoUrl: null`.
+Cada item contém somente `id`, `data`, `hora`, `observacoes`, `profissional` e `documentoUrl`. Um anexo ausente é representado por `documentoUrl: null`.
 
-- Aluno existente sem atendimentos ou consulta sem correspondências: `200 OK` com `[]`.
+- Aluno existente sem atendimentos ou consulta sem correspondências: `200 OK` com `itens: []`, `totalItens: 0` e `temMais: false`.
 - Matrícula inexistente: `404 Not Found`.
-- Data inválida, período com `fim` anterior a `inicio` ou ordem diferente de `asc`/`desc`: `400 Bad Request`. O período invertido retorna a mensagem "A data final deve ser igual ou posterior à data inicial." no campo `detail` de `application/problem+json`.
+- Data inválida, período com `fim` anterior a `inicio`, ordem diferente de `asc`/`desc` ou `pagina`/`tamanho` fora do intervalo: `400 Bad Request`. O período invertido retorna a mensagem "A data final deve ser igual ou posterior à data inicial." no campo `detail` de `application/problem+json`.
 - Sem sessão: `401 Unauthorized`. Sem a permissão `atendimentos:consultar`: `403 Forbidden`.
 
-A timeline preserva a ordem recebida do servidor. A busca aguarda 300 ms após a última alteração; mudanças nos filtros refazem a consulta e cancelam a requisição anterior. O modo de demonstração aplica os mesmos filtros e ordenação em memória.
+A timeline preserva a ordem recebida do servidor e carrega novas páginas incrementalmente via "Carregar mais atendimentos" sem duplicar registros. A busca aguarda 300 ms após a última alteração; mudanças nos filtros ou troca de aluno reiniciam a paginação para a página `0` e cancelam a requisição anterior. O modo de demonstração aplica os mesmos filtros, ordenação e paginação em memória.
 
 ## Validação
 

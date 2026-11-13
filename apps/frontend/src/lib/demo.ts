@@ -1,6 +1,7 @@
 import type {
   Aluno,
   Atendimento,
+  HistoricoPaginado,
   HistoricoParams,
   NovoAluno,
   NovoAtendimento,
@@ -117,32 +118,44 @@ const atendimentos: Atendimento[] = [
   },
 ]
 export const getAlunos = () => structuredClone(alunos)
-export function getAtendimentos(id: number, params: HistoricoParams = {}) {
-  const { inicio, fim, ordem = 'desc' } = params
+export function getAtendimentos(
+  id: number,
+  params: HistoricoParams = {},
+): HistoricoPaginado {
+  const { inicio, fim, ordem = 'desc', pagina = 0, tamanho = 10 } = params
   if (inicio && fim && inicio > fim)
     throw new ApiError(
       'A data final deve ser igual ou posterior à data inicial.',
       400,
     )
   const query = normalize(params.q?.trim() || '')
-  return structuredClone(
-    atendimentos
-      .filter(
-        (item) =>
-          item.idAluno === id &&
-          (!inicio || item.data >= inicio) &&
-          (!fim || item.data <= fim) &&
-          (!query ||
-            normalize(item.observacoes).includes(query) ||
-            normalize(item.profissional).includes(query) ||
-            item.documentos.some((doc) => normalize(doc.nome).includes(query))),
-      )
-      .sort(
-        (a, b) =>
-          `${a.data}T${a.hora}`.localeCompare(`${b.data}T${b.hora}`) *
-          (ordem === 'desc' ? -1 : 1),
-      ),
+  const filtrados = atendimentos
+    .filter(
+      (item) =>
+        item.idAluno === id &&
+        (!inicio || item.data >= inicio) &&
+        (!fim || item.data <= fim) &&
+        (!query ||
+          normalize(item.observacoes).includes(query) ||
+          normalize(item.profissional).includes(query) ||
+          item.documentos.some((doc) => normalize(doc.nome).includes(query))),
+    )
+    .sort((a, b) => {
+      const cmp = `${a.data}T${a.hora}`.localeCompare(`${b.data}T${b.hora}`)
+      const diff = cmp !== 0 ? cmp : a.idAtendimento - b.idAtendimento
+      return diff * (ordem === 'desc' ? -1 : 1)
+    })
+  const inicioPagina = pagina * tamanho
+  const itens = structuredClone(
+    filtrados.slice(inicioPagina, inicioPagina + tamanho),
   )
+  return {
+    itens,
+    pagina,
+    tamanho,
+    totalItens: filtrados.length,
+    temMais: inicioPagina + itens.length < filtrados.length,
+  }
 }
 export function cadastrarAluno(input: NovoAluno): Aluno {
   if (

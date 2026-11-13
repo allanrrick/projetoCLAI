@@ -1,5 +1,12 @@
-import { useCallback, useEffect, useState } from 'react'
-import { CalendarDays, Clock3, FileText, Plus, Search } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import {
+  CalendarDays,
+  Clock3,
+  FileText,
+  LoaderCircle,
+  Plus,
+  Search,
+} from 'lucide-react'
 import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { api } from '../lib/api'
 import { formatDate, initials, safeDocumentUrl } from '../lib/format'
@@ -84,6 +91,19 @@ export function Historico() {
     </>
   )
 }
+const HISTORICO_PAGE_SIZE = 10
+
+type HistoryState = {
+  queryKey: string
+  itens: Atendimento[]
+  totalItens: number
+  currentPage: number
+  hasMore: boolean
+  error: string
+  loadingMore: boolean
+  loadMoreError: string
+}
+
 function StudentHistory({ aluno }: { aluno: Aluno }) {
   const location = useLocation()
   const [sort, setSort] = useState<'asc' | 'desc'>('desc')
@@ -92,6 +112,21 @@ function StudentHistory({ aluno }: { aluno: Aluno }) {
   const [start, setStart] = useState('')
   const [end, setEnd] = useState('')
   const invalidDates = Boolean(start && end && start > end)
+
+  const [reloadTick, setReloadTick] = useState(0)
+  const [historyState, setHistoryState] = useState<HistoryState | null>(null)
+  const loadMoreControllerRef = useRef<AbortController | null>(null)
+
+  const queryKey = JSON.stringify([
+    aluno.idAluno,
+    aluno.matricula,
+    debouncedQuery,
+    start,
+    end,
+    sort,
+    reloadTick,
+  ])
+
   useEffect(() => {
     const timeout = window.setTimeout(
       () => setDebouncedQuery(query.trim()),
@@ -99,33 +134,162 @@ function StudentHistory({ aluno }: { aluno: Aluno }) {
     )
     return () => window.clearTimeout(timeout)
   }, [query])
-  const load = useCallback(
-    (signal: AbortSignal) =>
-      invalidDates
-        ? Promise.resolve<Atendimento[]>([])
-        : api.atendimentos(
-            aluno.idAluno,
-            aluno.matricula,
-            { q: debouncedQuery, inicio: start, fim: end, ordem: sort },
-            signal,
-          ),
-    [
-      aluno.idAluno,
-      aluno.matricula,
-      debouncedQuery,
-      start,
-      end,
-      sort,
-      invalidDates,
-    ],
-  )
-  const { data, loading, error, retry } = useResource(load)
+
+  useEffect(() => {
+    return () => loadMoreControllerRef.current?.abort()
+  }, [])
+
+  useEffect(() => {
+    loadMoreControllerRef.current?.abort()
+    loadMoreControllerRef.current = null
+    if (invalidDates) return
+
+    let active = true
+    const controller = new AbortController()
+
+    api
+      .atendimentos(
+        aluno.idAluno,
+        aluno.matricula,
+        {
+          q: debouncedQuery,
+          inicio: start,
+          fim: end,
+          ordem: sort,
+          pagina: 0,
+          tamanho: HISTORICO_PAGE_SIZE,
+        },
+        controller.signal,
+      )
+      .then((res) => {
+        if (!active) return
+        setHistoryState({
+          queryKey,
+          itens: res.itens,
+          totalItens: res.totalItens,
+          currentPage: res.pagina,
+          hasMore: res.temMais,
+          error: '',
+          loadingMore: false,
+          loadMoreError: '',
+        })
+      })
+      .catch((reason: unknown) => {
+        if (!active || controller.signal.aborted) return
+        setHistoryState({
+          queryKey,
+          itens: [],
+          totalItens: 0,
+          currentPage: 0,
+          hasMore: false,
+          error:
+            reason instanceof Error
+              ? reason.message
+              : 'Não foi possível carregar o histórico.',
+          loadingMore: false,
+          loadMoreError: '',
+        })
+      })
+
+    return () => {
+      active = false
+      controller.abort()
+    }
+  }, [
+    aluno.idAluno,
+    aluno.matricula,
+    debouncedQuery,
+    start,
+    end,
+    sort,
+    invalidDates,
+    reloadTick,
+    queryKey,
+  ])
+
   const [success, setSuccess] = useState(
     location.state?.success as string | undefined,
   )
-  const atendimentos = data || []
+  const activeState =
+    !invalidDates && historyState?.queryKey === queryKey ? historyState : null
+  const loading = !invalidDates && activeState === null
+  const atendimentos = activeState?.itens ?? []
+  const totalItens = activeState?.totalItens ?? 0
+  const currentPage = activeState?.currentPage ?? 0
+  const hasMore = activeState?.hasMore ?? false
+  const error = activeState?.error ?? ''
+  const loadingMore = activeState?.loadingMore ?? false
+  const loadMoreError = activeState?.loadMoreError ?? ''
   const historyLoading = loading || query.trim() !== debouncedQuery
   const hasFilters = Boolean(debouncedQuery || start || end)
+
+  function retry() {
+    setReloadTick((value) => value + 1)
+  }
+
+  function loadMore() {
+    if (loadingMore || historyLoading || !hasMore || invalidDates) return
+    loadMoreControllerRef.current?.abort()
+    const controller = new AbortController()
+    loadMoreControllerRef.current = controller
+    const requestKey = queryKey
+    const nextPage = currentPage + 1
+    setHistoryState((prev) =>
+      prev && prev.queryKey === requestKey
+        ? { ...prev, loadingMore: true, loadMoreError: '' }
+        : prev,
+    )
+
+    api
+      .atendimentos(
+        aluno.idAluno,
+        aluno.matricula,
+        {
+          q: debouncedQuery,
+          inicio: start,
+          fim: end,
+          ordem: sort,
+          pagina: nextPage,
+          tamanho: HISTORICO_PAGE_SIZE,
+        },
+        controller.signal,
+      )
+      .then((res) => {
+        if (controller.signal.aborted) return
+        setHistoryState((prev) => {
+          if (!prev || prev.queryKey !== requestKey) return prev
+          const seen = new Set(prev.itens.map((item) => item.idAtendimento))
+          const next = res.itens.filter(
+            (item) => !seen.has(item.idAtendimento),
+          )
+          return {
+            ...prev,
+            itens: [...prev.itens, ...next],
+            currentPage: res.pagina,
+            totalItens: res.totalItens,
+            hasMore: res.temMais,
+            loadingMore: false,
+            loadMoreError: '',
+          }
+        })
+      })
+      .catch((reason: unknown) => {
+        if (controller.signal.aborted) return
+        setHistoryState((prev) =>
+          prev && prev.queryKey === requestKey
+            ? {
+                ...prev,
+                loadingMore: false,
+                loadMoreError:
+                  reason instanceof Error
+                    ? reason.message
+                    : 'Não foi possível carregar mais atendimentos.',
+              }
+            : prev,
+        )
+      })
+  }
+
   function reset() {
     setQuery('')
     setDebouncedQuery('')
@@ -230,8 +394,8 @@ function StudentHistory({ aluno }: { aluno: Aluno }) {
         <p className="result-count" aria-live="polite" aria-atomic="true">
           {!historyLoading && !error && !invalidDates && (
             <>
-              {atendimentos.length}{' '}
-              {atendimentos.length === 1
+              {totalItens}{' '}
+              {totalItens === 1
                 ? 'atendimento encontrado'
                 : 'atendimentos encontrados'}
             </>
@@ -305,6 +469,24 @@ function StudentHistory({ aluno }: { aluno: Aluno }) {
                 </li>
               ))}
             </ol>
+            {(hasMore || loadMoreError) && (
+              <div className="timeline-pagination">
+                {loadMoreError && <Notice>{loadMoreError}</Notice>}
+                {hasMore && (
+                  <button
+                    type="button"
+                    className="button secondary"
+                    disabled={loadingMore}
+                    onClick={loadMore}
+                  >
+                    {loadingMore && <LoaderCircle size={17} className="spin" />}
+                    {loadingMore
+                      ? 'Carregando mais atendimentos…'
+                      : 'Carregar mais atendimentos'}
+                  </button>
+                )}
+              </div>
+            )}
           </>
         )}
       </section>

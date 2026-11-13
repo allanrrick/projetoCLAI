@@ -2,6 +2,7 @@ import type {
   Aluno,
   Atendimento,
   Documento,
+  HistoricoPaginado,
   HistoricoParams,
   NovoAluno,
   NovoAtendimento,
@@ -237,7 +238,7 @@ export const api = {
     matricula?: string,
     params: HistoricoParams = {},
     signal?: AbortSignal,
-  ): Promise<Atendimento[]> {
+  ): Promise<HistoricoPaginado> {
     if (demo) return (await demo).getAtendimentos(idAluno, params)
     const chave = matricula ? encodeURIComponent(matricula) : String(idAluno)
     const query = new URLSearchParams()
@@ -245,14 +246,42 @@ export const api = {
     if (params.inicio) query.set('inicio', params.inicio)
     if (params.fim) query.set('fim', params.fim)
     if (params.ordem) query.set('ordem', params.ordem)
+    if (typeof params.pagina === 'number')
+      query.set('pagina', String(params.pagina))
+    if (typeof params.tamanho === 'number')
+      query.set('tamanho', String(params.tamanho))
     const search = query.toString()
-    const result = await request<Record<string, unknown>[]>(
+    const result = await request<Record<string, unknown>>(
       `/atendimentos/${chave}${search ? `?${search}` : ''}`,
       { signal },
     )
-    if (!Array.isArray(result))
+    if (
+      !result ||
+      typeof result !== 'object' ||
+      !Array.isArray(result.itens)
+    ) {
       throw new ApiError('Não foi possível carregar o histórico.')
-    return result.map((item) => mapAtendimento(item, idAluno))
+    }
+    const itens = result.itens.map((item) =>
+      mapAtendimento(item as Record<string, unknown>, idAluno),
+    )
+    const pagina =
+      typeof result.pagina === 'number' ? result.pagina : params.pagina ?? 0
+    const tamanho =
+      typeof result.tamanho === 'number'
+        ? result.tamanho
+        : params.tamanho ?? 10
+    const totalItens =
+      typeof result.totalItens === 'number' ? result.totalItens : itens.length
+    const temMais =
+      typeof result.temMais === 'boolean' ? result.temMais : false
+    return {
+      itens,
+      pagina,
+      tamanho,
+      totalItens,
+      temMais,
+    }
   },
   async cadastrarAtendimento(input: NovoAtendimento): Promise<Atendimento> {
     if (demo) return (await demo).cadastrarAtendimento(input)
