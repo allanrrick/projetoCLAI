@@ -54,6 +54,21 @@ async function session(
     'planos:cadastrar',
   ],
 ) {
+  await page.route('**/api/academico/cursos', (route) =>
+    route.request().method() === 'GET'
+      ? route.fulfill({
+          json: [
+            { idCurso: 1, nome: 'Análise e Desenvolvimento de Sistemas' },
+            { idCurso: 2, nome: 'Engenharia Civil' },
+          ],
+        })
+      : route.fallback(),
+  )
+  await page.route('**/api/academico/disciplinas', (route) =>
+    route.request().method() === 'GET'
+      ? route.fulfill({ json: [] })
+      : route.fallback(),
+  )
   await page.route('**/api/auth/sessao', (route) =>
     route.fulfill({
       json: {
