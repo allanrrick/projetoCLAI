@@ -16,12 +16,15 @@ import { api } from '../lib/api'
 import { formatDate, initials, normalize } from '../lib/format'
 import { useResource } from '../hooks/useResource'
 import { Empty, Loading, Notice, PageTitle } from '../components/common'
+import { AlunoAutocomplete } from '../components/AlunoAutocomplete'
+import type { Aluno } from '../types'
 
 export function Alunos() {
   const { can } = useAuth()
   const { data, error, loading, retry } = useResource(api.alunos)
   const location = useLocation()
   const [query, setQuery] = useState('')
+  const [selectedAluno, setSelectedAluno] = useState<Aluno | null>(null)
   const [curso, setCurso] = useState('')
   const [status, setStatus] = useState('')
   const [page, setPage] = useState(1)
@@ -32,7 +35,7 @@ export function Alunos() {
   const cursos = [...new Set(alunos.map((aluno) => aluno.curso))].sort((a, b) =>
     a.localeCompare(b, 'pt-BR'),
   )
-  const filtered = alunos.filter(
+  const filtered = (selectedAluno ? [selectedAluno] : alunos).filter(
     (aluno) =>
       normalize(
         `${aluno.nome} ${aluno.matricula} ${aluno.email || ''}`,
@@ -45,6 +48,7 @@ export function Alunos() {
   const items = filtered.slice((currentPage - 1) * 8, currentPage * 8)
   function reset() {
     setQuery('')
+    setSelectedAluno(null)
     setCurso('')
     setStatus('')
     setPage(1)
@@ -139,12 +143,20 @@ export function Alunos() {
             <div className="filter-bar">
               <div className="search-field">
                 <Search size={18} />
-                <input
-                  aria-label="Buscar alunos"
+                <AlunoAutocomplete
+                  id="buscar-alunos"
+                  label="Buscar alunos"
                   placeholder="Buscar por nome, matrícula ou e-mail"
                   value={query}
-                  onChange={(event) => {
-                    setQuery(event.target.value)
+                  selectedId={selectedAluno?.idAluno}
+                  onChange={(value) => {
+                    setQuery(value)
+                    setSelectedAluno(null)
+                    setPage(1)
+                  }}
+                  onSelect={(aluno) => {
+                    setQuery(aluno.nome)
+                    setSelectedAluno(aluno)
                     setPage(1)
                   }}
                 />

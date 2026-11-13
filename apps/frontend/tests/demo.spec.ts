@@ -9,7 +9,7 @@ test('lista alunos e combina busca, curso e situação', async ({ page }) => {
     page.getByText('Demonstração com dados fictícios.', { exact: false }),
   ).toBeVisible()
   await page
-    .getByRole('textbox', { name: 'Buscar alunos' })
+    .getByRole('combobox', { name: 'Buscar alunos' })
     .fill('ana oliveira')
   await expect(page.locator('tbody tr')).toHaveCount(1)
   await page
@@ -75,7 +75,8 @@ test('registra atendimento com anexo no aluno correto e consulta o histórico', 
   page,
 }) => {
   await page.goto('/atendimentos/novo?aluno=3')
-  await expect(page.getByLabel('Aluno *')).toHaveValue('3')
+  await expect(page.getByLabel('Aluno *')).toHaveValue('Clara Lima (exemplo)')
+  await expect(page.locator('input[name="idAluno"]')).toHaveValue('3')
   await page.getByLabel('Data *').fill('2026-10-15')
   await page.getByLabel('Hora *').fill('11:30')
   await page
@@ -215,9 +216,9 @@ test('preenche e registra relatório de acompanhamento individualizado', async (
     .fill('Excelente progresso no semestre.')
   await page.getByRole('button', { name: 'Salvar relatório' }).click()
   await expect(
-    page
-      .getByRole('status')
-      .filter({ hasText: 'Relatório de acompanhamento registrado com sucesso.' }),
+    page.getByRole('status').filter({
+      hasText: 'Relatório de acompanhamento registrado com sucesso.',
+    }),
   ).toBeVisible()
   await expect(page.locator('.timeline')).toContainText('Banco de Dados I')
   await expect(page.locator('.timeline')).toContainText(
@@ -258,12 +259,10 @@ test('valida campos obrigatórios e registra o PEI do estudante', async ({
     .fill('Roteiros visuais antecipados e avaliação adaptada.')
   await page.getByRole('button', { name: 'Registrar PEI' }).click()
   await expect(
-    page
-      .getByRole('status')
-      .filter({
-        hasText:
-          'Plano Educacional Individualizado (PEI) registrado com sucesso.',
-      }),
+    page.getByRole('status').filter({
+      hasText:
+        'Plano Educacional Individualizado (PEI) registrado com sucesso.',
+    }),
   ).toBeVisible()
   await expect(page.locator('.timeline')).toContainText(
     'Intérprete de Libras e material visual.',
@@ -305,11 +304,9 @@ test('valida campos obrigatórios do PEA e verifica vínculo ao aluno e à disci
     .fill('Projeto prático incremental com feedback semanal.')
   await page.getByRole('button', { name: 'Registrar PEA' }).click()
   await expect(
-    page
-      .getByRole('status')
-      .filter({
-        hasText: 'Plano de Ensino Adaptado (PEA) registrado com sucesso.',
-      }),
+    page.getByRole('status').filter({
+      hasText: 'Plano de Ensino Adaptado (PEA) registrado com sucesso.',
+    }),
   ).toBeVisible()
   await expect(page.locator('.timeline > li')).toHaveCount(2)
   await page
@@ -378,4 +375,48 @@ test('acessa planos de ação pela lista de alunos, valida condicionais e separa
   await expect(
     page.getByText('Ainda não há planos de ação para este aluno'),
   ).toBeVisible()
+})
+
+test('seleciona aluno na tabela e no atendimento usando as sugestões', async ({
+  page,
+}) => {
+  await page.goto('/alunos')
+  const busca = page.getByRole('combobox', { name: 'Buscar alunos' })
+  await busca.fill('Cla')
+  await expect(page.getByRole('option', { name: /DEMO003/ })).toBeVisible()
+  await busca.press('ArrowDown')
+  await busca.press('Enter')
+  await expect(page.locator('tbody tr')).toHaveCount(1)
+  await expect(page.locator('tbody')).toContainText('DEMO003')
+  await page.goto('/atendimentos/novo')
+  await page.getByRole('combobox', { name: 'Aluno *', exact: true }).fill('Bru')
+  await page.getByRole('option', { name: /DEMO002/ }).click()
+  await expect(page.locator('input[name="idAluno"]')).toHaveValue('2')
+  await page.getByLabel('Data *').fill('2026-11-13')
+  await page.getByLabel('Hora *').fill('10:00')
+  await page
+    .getByLabel('Observações *')
+    .fill('Atendimento selecionado pela busca.')
+  await page.getByRole('button', { name: 'Registrar atendimento' }).click()
+  await expect(page).toHaveURL(/historico\?aluno=2/)
+  await expect(page.locator('.timeline')).toContainText(
+    'Atendimento selecionado pela busca.',
+  )
+})
+
+test('sugestões de alunos mantêm a seleção em tela pequena', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/atendimentos/novo')
+  const busca = page.getByRole('combobox', { name: 'Aluno *', exact: true })
+  await busca.fill('ana')
+  await page.getByRole('option', { name: /DEMO001/ }).click()
+  await expect(page.locator('input[name="idAluno"]')).toHaveValue('1')
+  await expect(busca).toHaveValue('Ana Oliveira (exemplo)')
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBeTruthy()
 })
