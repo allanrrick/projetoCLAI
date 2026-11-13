@@ -129,11 +129,16 @@ public class AlunoController {
                     ));
         }
 
+
         // Atualizar os dados
         aluno.setMatricula(request.matricula());
         aluno.setNome(request.nome());
         aluno.setEmail(email);
         aluno.setCurso(request.curso());
+
+        if (request.ativo() != null) {
+            aluno.setAtivo(request.ativo());
+        }
 
         Aluno atualizado = alunoRepository.save(aluno);
 
@@ -176,6 +181,36 @@ public class AlunoController {
                         "Mensagem", "Aluno desativado com sucesso"
                 )
         );
+    }
+
+    // Reativar aluno
+    @PatchMapping("/{id}/reativar")
+    public ResponseEntity<?> reativar(
+            @PathVariable Long id) {
+
+        Aluno aluno = alunoRepository.findById(id)
+                .orElse(null);
+
+        if (aluno == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of(
+                            "Erro", "Aluno não encontrado",
+                            "id", id
+                    ));
+        }
+
+        if (Boolean.TRUE.equals(aluno.getAtivo())) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of(
+                            "Erro", "Aluno já está ativo"
+                    ));
+        }
+
+        aluno.setAtivo(true);
+
+        Aluno reativado = alunoRepository.save(aluno);
+
+        return ResponseEntity.ok(reativado);
     }
 
 }
