@@ -383,6 +383,57 @@ main#main-content {
   width: 168px;
   font-size: 11px;
 }
+.aluno-autocomplete {
+  position: relative;
+  width: 100%;
+}
+.search-field > svg {
+  z-index: 1;
+  pointer-events: none;
+}
+.aluno-sugestoes {
+  position: absolute;
+  top: calc(100% + 4px);
+  inset-inline: 0;
+  z-index: 30;
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 5px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  box-shadow: 0 8px 20px #1c302a1a;
+}
+.aluno-opcao {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  padding: 10px;
+  border: 0;
+  border-radius: 4px;
+  background: white;
+  text-align: left;
+  font-size: 12px;
+}
+.aluno-opcao:hover,
+.aluno-opcao[aria-selected='true'] {
+  background: #eaf3ec;
+  color: var(--green-dark);
+}
+.aluno-opcao span {
+  font-size: 10px;
+  color: var(--muted);
+}
+.aluno-busca-mensagem {
+  padding: 12px 10px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.aluno-busca-mensagem .text-button {
+  display: block;
+  margin-top: 8px;
+}
 .table-scroll {
   overflow-x: auto;
   position: relative;

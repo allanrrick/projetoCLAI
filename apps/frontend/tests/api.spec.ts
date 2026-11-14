@@ -423,7 +423,7 @@ test('pagina a lista e volta à primeira página após aplicar filtro', async ({
   await page.getByRole('button', { name: 'Próxima página' }).click()
   await expect(page.locator('tbody tr')).toHaveCount(3)
   await page
-    .getByRole('textbox', { name: 'Buscar alunos' })
+    .getByRole('combobox', { name: 'Buscar alunos' })
     .fill('Estudante 11')
   await expect(page.locator('tbody tr')).toHaveCount(1)
   await expect(
@@ -909,4 +909,254 @@ test('exibe observações completas para 1 e 2+ atendimentos e estado vazio apen
   ])
   await page.reload()
   await expect(page.locator('.timeline > li')).toHaveCount(3)
+})
+
+test('busca alunos somente a partir de três caracteres e após 300 ms da última alteração', async ({
+  page,
+}) => {
+  await session(page)
+  await freezeClock(page)
+  let consultas = 0
+  await page.route('**/api/alunos', (route) => {
+    consultas++
+    return route.fulfill({ json: [aluno] })
+  })
+  await page.goto('/alunos')
+  await expect(page.locator('tbody')).toContainText('Aluno da API')
+  const busca = page.getByRole('combobox', { name: 'Buscar alunos' })
+  consultas = 0
+  await busca.fill('Al')
+  await page.clock.fastForward(1000)
+  expect(consultas).toBe(0)
+  await expect(busca).toHaveAttribute('aria-expanded', 'false')
+  await busca.fill('Alu')
+  await page.clock.fastForward(200)
+  expect(consultas).toBe(0)
+  await busca.fill('Aluno')
+  await page.clock.fastForward(299)
+  expect(consultas).toBe(0)
+  await page.clock.fastForward(1)
+  await expect.poll(() => consultas).toBe(1)
+  await expect(page.getByRole('listbox').getByRole('option')).toHaveCount(1)
+})
+
+test('limita sugestões a cinco, distingue homônimos e mantém os filtros da tabela', async ({
+  page,
+}) => {
+  await session(page)
+  const alunos = Array.from({ length: 7 }, (_, index) => ({
+    ...aluno,
+    idAluno: index + 1,
+    nome: index < 2 ? 'Ana Souza' : `Ana Estudante ${index + 1}`,
+    matricula: `MAT00${index + 1}`,
+    curso: index === 1 ? 'Curso B' : 'Curso A',
+  }))
+  await page.route('**/api/alunos', (route) => route.fulfill({ json: alunos }))
+  await page.goto('/alunos')
+  const busca = page.getByRole('combobox', { name: 'Buscar alunos' })
+  await busca.fill('Ana')
+  const sugestoes = page.getByRole('listbox').getByRole('option')
+  await expect(sugestoes).toHaveCount(5)
+  await expect(sugestoes.nth(0)).toContainText('Ana Souza')
+  await expect(sugestoes.nth(0)).toContainText('MAT001')
+  await expect(sugestoes.nth(1)).toContainText('MAT002')
+  await page.getByRole('option', { name: /MAT002/ }).click()
+  await expect(page.locator('tbody tr')).toHaveCount(1)
+  await expect(page.locator('tbody')).toContainText('MAT002')
+  await expect(page.locator('tbody')).not.toContainText('MAT001')
+  await page.getByLabel('Filtrar por curso').selectOption('Curso A')
+  await expect(page.getByText('Nenhum aluno encontrado')).toBeVisible()
+  await page.getByRole('button', { name: 'Limpar', exact: true }).click()
+  await expect(busca).toHaveValue('')
+  await expect(page.locator('tbody tr')).toHaveCount(7)
+})
+
+test('seleciona homônimo por teclado e envia a matrícula do identificador correto no atendimento', async ({
+  page,
+}) => {
+  await session(page)
+  const alunos = [
+    { ...aluno, nome: 'Ana Souza', matricula: 'MAT001' },
+    { ...aluno, idAluno: 2, nome: 'Ana Souza', matricula: 'MAT002' },
+  ]
+  await page.route('**/api/alunos', (route) => route.fulfill({ json: alunos }))
+  let corpo = ''
+  let envios = 0
+  await page.route('**/api/atendimentos', (route) => {
+    envios++
+    corpo = route.request().postData() || ''
+    return route.fulfill({ status: 201, json: { id: 1 } })
+  })
+  await page.route('**/api/atendimentos/MAT002*', (route) =>
+    route.fulfill({ json: [] }),
+  )
+  await page.goto('/atendimentos/novo')
+  const busca = page.getByRole('combobox', { name: 'Aluno *', exact: true })
+  await busca.fill('Ana')
+  await expect(page.getByRole('listbox').getByRole('option')).toHaveCount(2)
+  await busca.press('ArrowUp')
+  await expect(busca).toHaveAttribute(
+    'aria-activedescendant',
+    'idAluno-opcao-2',
+  )
+  await busca.press('ArrowDown')
+  await expect(busca).toHaveAttribute(
+    'aria-activedescendant',
+    'idAluno-opcao-1',
+  )
+  await busca.press('ArrowDown')
+  await busca.press('Enter')
+  expect(envios).toBe(0)
+  await expect(busca).toHaveValue('Ana Souza')
+  await expect(page.locator('input[name="idAluno"]')).toHaveValue('2')
+  await expect(busca).toHaveAttribute('aria-expanded', 'false')
+  await page.getByLabel('Data *').fill('2026-11-13')
+  await page.getByLabel('Hora *').fill('09:00')
+  await page
+    .getByLabel('Observações *')
+    .fill('Atendimento do segundo aluno homônimo.')
+  await page.getByRole('button', { name: 'Registrar atendimento' }).click()
+  await expect(page).toHaveURL(/historico\?aluno=2/)
+  expect(envios).toBe(1)
+  expect(corpo).toContain('MAT002')
+  expect(corpo).not.toContain('MAT001')
+})
+
+test('editar o nome invalida a seleção anterior e texto livre não registra atendimento', async ({
+  page,
+}) => {
+  await session(page)
+  let envios = 0
+  await page.route('**/api/atendimentos', (route) => {
+    envios++
+    return route.fulfill({ status: 201, json: {} })
+  })
+  await page.goto('/atendimentos/novo?aluno=1')
+  const busca = page.getByRole('combobox', { name: 'Aluno *', exact: true })
+  await expect(busca).toHaveValue('Aluno da API')
+  await expect(page.locator('input[name="idAluno"]')).toHaveValue('1')
+  await busca.fill('Aluno')
+  await expect(page.locator('input[name="idAluno"]')).toHaveValue('')
+  await page.getByLabel('Data *').fill('2026-11-13')
+  await page.getByLabel('Hora *').fill('09:00')
+  await page
+    .getByLabel('Observações *')
+    .fill('Registro sem selecionar sugestão.')
+  await page.getByRole('button', { name: 'Registrar atendimento' }).click()
+  await expect(page.getByRole('alert')).toContainText('Selecione um aluno')
+  expect(envios).toBe(0)
+})
+
+test('resposta antiga não substitui as sugestões de uma busca mais recente', async ({
+  page,
+}) => {
+  await session(page)
+  let buscar = false
+  let consultas = 0
+  let liberarAntiga: () => void = () => {}
+  let finalizarAntiga: () => void = () => {}
+  const aguardarAntiga = new Promise<void>((resolve) => {
+    liberarAntiga = resolve
+  })
+  const antigaConcluida = new Promise<void>((resolve) => {
+    finalizarAntiga = resolve
+  })
+  await page.route('**/api/alunos', async (route) => {
+    if (!buscar) return route.fulfill({ json: [aluno] })
+    consultas++
+    if (consultas === 1) {
+      await aguardarAntiga
+      await route
+        .fulfill({ json: [{ ...aluno, nome: 'Ana Antiga' }] })
+        .catch(() => {})
+      finalizarAntiga()
+      return
+    }
+    return route.fulfill({
+      json: [
+        { ...aluno, idAluno: 2, nome: 'Bruno Atual', matricula: 'ATUAL002' },
+      ],
+    })
+  })
+  await page.goto('/alunos')
+  await expect(page.locator('tbody')).toContainText('Aluno da API')
+  buscar = true
+  const busca = page.getByRole('combobox', { name: 'Buscar alunos' })
+  await busca.fill('Ana')
+  await expect.poll(() => consultas).toBe(1)
+  try {
+    await expect(
+      page.getByRole('status').filter({ hasText: 'Buscando alunos' }),
+    ).toBeVisible()
+    await busca.fill('Bru')
+    await expect(
+      page.getByRole('option', { name: /Bruno Atual/ }),
+    ).toBeVisible()
+  } finally {
+    liberarAntiga()
+  }
+  await antigaConcluida
+  await expect(page.getByRole('listbox').getByRole('option')).toHaveCount(1)
+  await expect(page.getByRole('option', { name: /Bruno Atual/ })).toBeVisible()
+  await expect(page.getByRole('option', { name: /Ana Antiga/ })).toHaveCount(0)
+  await busca.fill('Br')
+  await expect(busca).toHaveAttribute('aria-expanded', 'false')
+  await expect(page.getByRole('listbox')).toHaveCount(0)
+})
+
+test('trata erro e ausência de sugestões, permite tentar novamente e fecha com Escape e Tab', async ({
+  page,
+}) => {
+  await session(page)
+  let buscar = false
+  let falhar = true
+  await page.route('**/api/alunos', (route) => {
+    if (!buscar) return route.fulfill({ json: [aluno] })
+    return falhar
+      ? route.fulfill({
+          status: 500,
+          json: { Erro: 'Falha ao buscar alunos.' },
+        })
+      : route.fulfill({ json: [aluno] })
+  })
+  await page.goto('/alunos')
+  await expect(page.locator('tbody')).toContainText('Aluno da API')
+  buscar = true
+  const busca = page.getByRole('combobox', { name: 'Buscar alunos' })
+  await busca.fill('XYZ')
+  await expect(page.getByRole('alert')).toContainText('Falha ao buscar alunos.')
+  await expect(page.getByRole('listbox').getByRole('option')).toHaveCount(0)
+  falhar = false
+  await page.getByRole('button', { name: 'Tentar novamente' }).click()
+  await expect(
+    page
+      .getByRole('status')
+      .filter({ hasText: 'Nenhuma sugestão encontrada.' }),
+  ).toBeVisible()
+  await busca.fill('Aluno')
+  await expect(page.getByRole('option', { name: /API001/ })).toBeVisible()
+  await busca.press('Escape')
+  await expect(busca).toHaveValue('Aluno')
+  await expect(busca).toHaveAttribute('aria-expanded', 'false')
+  await busca.press('ArrowDown')
+  await expect(page.getByRole('option', { name: /API001/ })).toBeVisible()
+  await busca.press('Tab')
+  await expect(busca).toHaveAttribute('aria-expanded', 'false')
+})
+
+test('mantém consulta de alunos pelo assistente e bloqueia atendimento sem permissão', async ({
+  page,
+}) => {
+  await session(page, ['alunos:consultar'])
+  await page.goto('/alunos')
+  await page.getByRole('combobox', { name: 'Buscar alunos' }).fill('Aluno')
+  await page.getByRole('option', { name: /API001/ }).click()
+  await expect(page.locator('tbody')).toContainText('API001')
+  await page.goto('/atendimentos/novo')
+  await expect(
+    page.getByRole('heading', { name: 'Acesso restrito' }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole('combobox', { name: 'Aluno *', exact: true }),
+  ).toHaveCount(0)
 })
