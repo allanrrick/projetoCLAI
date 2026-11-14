@@ -217,10 +217,10 @@ export const api = {
     if (!demo) await request<void>('/auth/logout', { method: 'POST' })
     currentSession = null
   },
-  async alunos(): Promise<Aluno[]> {
+  async alunos(signal?: AbortSignal): Promise<Aluno[]> {
     const result = demo
       ? (await demo).getAlunos()
-      : await request<Aluno[]>('/alunos')
+      : await request<Aluno[]>('/alunos', { signal })
     if (!Array.isArray(result))
       throw new ApiError('Não foi possível carregar a lista de alunos.')
     return result

@@ -20,6 +20,8 @@ public record AtualizarAlunoDTO(
 
         @NotBlank
         @Size(max = 100)
-        String curso
+        String curso,
+
+        Boolean ativo
 
 ) {}
